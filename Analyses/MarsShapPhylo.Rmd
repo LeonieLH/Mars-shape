@@ -12,6 +12,8 @@ output: html_document
 
 library(geomorph)
 library(ape)
+library(plyr)
+library(abind)
 
 ```
 #read in coordinates
