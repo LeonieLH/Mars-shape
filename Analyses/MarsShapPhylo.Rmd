@@ -18,6 +18,22 @@ library(abind)
 ```
 #read in coordinates
 ```{r}
+ filelist <- list.files(path= "./Data/raw/Coordinates/", pattern = "*.txt")
+  names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
+  filelist <- paste("./Data/raw/Coordinates/", filelist, sep="") # rename with path
+  coords <- NULL # make empty object that will be filled with 3D array of coordinate data
+  for (i in 1:length(filelist)){
+    temp <- read.morphologika(filelist[i])
+    k <- dim(temp)[1]
+    coords <- rbind(coords, two.d.array(temp)) }
+  Data <- arrayspecs(coords, k, 3)
+  dimnames(rep.1)[[3]] <- names
+  remove(i, filelist, names, k, coords, temp) # clean up environment
 
+```
+
+#GPA - read up on what it does and write down here what it does
+```{r}
+GPA <- gpagen(Data)
 
 ```
