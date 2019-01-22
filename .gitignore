@@ -8,6 +8,11 @@
 # Example code in package build process
 *-Ex.R
 
+#image files and pdfs, and ply files
+.pdf
+.jpg
+.ply
+
 # Output files from R CMD build
 /*.tar.gz
 
