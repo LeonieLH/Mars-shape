@@ -1,0 +1,16 @@
+---
+title: "Marsupial shape and phylogenetics"
+author: "Leonie Lange-Hodgson"
+date: "22 January 2019"
+output: html_document
+---
+
+
+# load required libraries
+
+```{r}
+
+library(geomorph)
+library(ape)
+
+```
