@@ -18,9 +18,9 @@ library(abind)
 ```
 #read in coordinates
 ```{r}
- filelist <- list.files(path= "./Data/raw/Coordinates/", pattern = "*.txt")
+ filelist <- list.files(path= "./Data/Raw/Coordinates/", pattern = "*.txt")
   names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
-  filelist <- paste("./Data/raw/Coordinates/", filelist, sep="") # rename with path
+  filelist <- paste("./Data/Raw/Coordinates/", filelist, sep="") # rename with path
   coords <- NULL # make empty object that will be filled with 3D array of coordinate data
   for (i in 1:length(filelist)){
     temp <- read.morphologika(filelist[i])
