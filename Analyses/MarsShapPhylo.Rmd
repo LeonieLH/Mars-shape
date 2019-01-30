@@ -40,5 +40,5 @@ library(abind)
 #GPA - superimposing a group of shapes (removing all the differences in size/scale, orientation and location between this group of species) so that the only differences in the coordinates of corresponding landmarks between species must be the result of differences in shape between those species
 ```{r}
 GPA <- gpagen(Data)
-
+PCA <- plotTangentSpace(GPA)
 ```
