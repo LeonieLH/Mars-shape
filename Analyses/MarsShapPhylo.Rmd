@@ -5,6 +5,11 @@ date: "22 January 2019"
 output: html_document
 ---
 
+#establish directory
+
+```{r setup, include = FALSE}
+setwd("D:/GitHub_Folder/Mars-shape/Data/Raw/Coordinates")
+```
 
 # load required libraries
 
@@ -18,16 +23,16 @@ library(abind)
 ```
 #read in coordinates
 ```{r}
- filelist <- list.files(path= "./Data/Raw/Coordinates/", pattern = "*.txt")
+ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
-  filelist <- paste("./Data/Raw/Coordinates/", filelist, sep="") # rename with path
+  filelist <- paste("../Data/Raw/Coordinates/", filelist, sep="") # rename with path
   coords <- NULL # make empty object that will be filled with 3D array of coordinate data
   for (i in 1:length(filelist)){
-    temp <- read.morphologika(filelist[i])
-    k <- dim(temp)[1]
+    temp <- read.morphologika(filelist[1]) 
+    k <- dim(temp)[1] 
     coords <- rbind(coords, two.d.array(temp)) }
-  Data <- arrayspecs(coords, k, 3)
-  dimnames(rep.1)[[3]] <- names
+  Data <- arrayspecs(coords, k, 3) 
+  dimnames(Data)[[3]] <- names
   remove(i, filelist, names, k, coords, temp) # clean up environment
 
 ```
