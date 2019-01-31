@@ -22,7 +22,8 @@ library(abind)
 #RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
 
 #This working directory needs to be set for this chunk because otherwise it won't find the files. It is an issue of rmd talking to R itself.
-setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates")
+setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates") #Vera's computer
+setwd("D:/Github_Projects/Mars-shape/Data/Raw/Coordinates")  #Leonie's computer
 
 
 filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
