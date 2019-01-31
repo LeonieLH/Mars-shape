@@ -5,11 +5,6 @@ date: "22 January 2019"
 output: html_document
 ---
 
-#establish directory
-
-```{r setup, include = FALSE}
-setwd("D:/GitHub_Folder/Mars-shape/Data/Raw/Coordinates")
-```
 
 # load required libraries
 
@@ -23,22 +18,41 @@ library(abind)
 ```
 #read in coordinates
 ```{r}
- filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
+
+#RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
+
+#This working directory needs to be set for this chunk because otherwise it won't find the files. It is an issue of rmd talking to R itself.
+setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates")
+
+
+filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
   filelist <- paste("../Data/Raw/Coordinates/", filelist, sep="") # rename with path
   coords <- NULL # make empty object that will be filled with 3D array of coordinate data
   for (i in 1:length(filelist)){
-    temp <- read.morphologika(filelist[1]) 
+    temp  <- read.morphologika(filelist[i]) 
     k <- dim(temp)[1] 
     coords <- rbind(coords, two.d.array(temp)) }
   Data <- arrayspecs(coords, k, 3) 
   dimnames(Data)[[3]] <- names
   remove(i, filelist, names, k, coords, temp) # clean up environment
+  
+  #Double check that the 3D info is entered properly
+   plot3d(Data[,,5], asp=FALSE)
+  text3d(Data[,,5], texts=c(1:71))
 
 ```
 
 #GPA - superimposing a group of shapes (removing all the differences in size/scale, orientation and location between this group of species) so that the only differences in the coordinates of corresponding landmarks between species must be the result of differences in shape between those species
 ```{r}
+#Run GPA
 GPA <- gpagen(Data)
-PCA <- plotTangentSpace(GPA)
+
+PCA <- plotTangentSpace(GPA$coords, label=dimnames(GPA$coords)[[3]])
+
+#If there is an obvious problem specimen, find out what number specimen it is on the GPA
+dimnames(GPA$coords)[[3]]
+
+plotRefToTarget(GPA$coords[,,14], GPA$coords[,,16], method="vector")
+
 ```
