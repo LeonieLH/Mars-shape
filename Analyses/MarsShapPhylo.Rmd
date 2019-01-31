@@ -48,11 +48,20 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
 #Run GPA
 GPA <- gpagen(Data)
 
+#Run PCA
 PCA <- plotTangentSpace(GPA$coords, label=dimnames(GPA$coords)[[3]])
+
+#PCA eigenvalues
+PCA$pc.summary$importance
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
 dimnames(GPA$coords)[[3]]
 
 plotRefToTarget(GPA$coords[,,14], GPA$coords[,,16], method="vector")
+
+#Visualize main differences
+
+plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector")
+
 
 ```
