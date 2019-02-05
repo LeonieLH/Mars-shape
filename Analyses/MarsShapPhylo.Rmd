@@ -62,7 +62,7 @@ plotRefToTarget(GPA$coords[,,14], GPA$coords[,,16], method="vector")
 
 #Visualize main differences
 #Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
-PRTT=gridPar(pt.bg="hot pink", pt.size = 1)
+PRTT=gridPar(pt.bg="green", pt.size = 1)
 
 plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
 plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector")
@@ -72,7 +72,10 @@ plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector")
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
 ```{r}
+MGD<-geomorph.data.frame(GPA)
+attributes(MGD)
 
+MarAllo<-procD.allometry(GPA$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA, iter=149, print.progress=FALSE)
 
 
 ```
