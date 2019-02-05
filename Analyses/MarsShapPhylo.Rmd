@@ -75,8 +75,8 @@ plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector")
 MGD<-geomorph.data.frame(GPA)
 attributes(MGD)
 
-MarAllo<-procD.allometry(GPA$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA, iter=149, print.progress=FALSE)
-
+MarAllo<-procD.allometry(GPA$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=MGD, iter=149, print.progress=FALSE)
+summary(MarAllo)
 
 ```
 
