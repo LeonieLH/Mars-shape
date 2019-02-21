@@ -1,4 +1,0 @@
-#NEXUS
-begin trees;
-	tree tree_1 = [&R] (Rhyncholestes_raphanurus:86.98463,((Caluromys_lanatus:38.30001,((Monodelphis_domestica:25.66537,Marmosa_mexicana:25.66537):3.40405,(Chironectes_minimus:9.69686,Didelphis_marsupialis:9.69686):19.37256):9.23059):44.18353,(Dromiciops_gliroides:69.20811,((Isoodon_obesulus:64.32118,(Sminthopsis_dolichura:24.92354,(Antechinus_flavipes:18.52436,Dasyurus_viverrinus:18.52438):6.39917):39.39762):2.37617,(Trichosurus_vulpecula:46.9872,((Distoechurus_pennatus:40.64342,(Petaurus_breviceps:32.32868,Petauroides_volans:32.32868):8.31475):5.66639,(Hypsiprymnodon_moschatus:29.36881,(Potorous_tridactylus:16.85234,(Thylogale_stigmatica:6.7349,Petrogale_xanthopus:6.73489):10.11743):12.51648):16.94101):0.6774):19.71011):2.51078):13.27544):4.50108);
-end;
