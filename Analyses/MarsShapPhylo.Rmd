@@ -23,7 +23,7 @@ library(geiger)
 #RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
 
 #This working directory needs to be set for this chunk because otherwise it won't find the files. It is an issue of rmd talking to R itself.
-#setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates") #Vera's computer
+setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates") #Vera's computer
 setwd("D:/Github_Projects/Mars-shape/Data/Raw/Coordinates")  #Leonie's computer
 
 
@@ -69,14 +69,22 @@ dimnames(GPA$coords)[[3]]
 
 plotRefToTarget(GPA$coords[,,14], GPA$coords[,,16], method="vector")
 
-####~~~~~~~~~~Visualize main differences~~~~~~~~~~~~####
+```
+
+
+# Visualize main differences
+```{r}
+
 #Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
 PRTT=gridPar(pt.bg="green", pt.size = 1)
 
 plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
 plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
+```
 
-####~~~~~~~~~~~~AVERAGING REPLICATES~~~~~~~~~~~~~~~~~####
+#AVERAGING REPLICATES
+
+```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
 
 # shape data
@@ -88,6 +96,7 @@ ind.Csize <- as.vector(aggregate(GPA$Csize ~ dimnames(GPA$coords)[[3]], FUN=mean
 names(ind.Csize) <- unique(dimnames(GPA$coords)[[3]])
 # ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
 
+GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 
 ```
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
@@ -107,20 +116,20 @@ summary(MarAllo)
 #All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
 #I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
 
-tree=read.nexus("D:/Github_projects/Mars-shape/Data/Raw/Mitchell_pruned_tree.nex")
+tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
 tree_use <- tree[1]$tree_1
 
 ###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
 tree_use$tip.label[166]  
 #This shows particular tip label (without the number present this code will provide you with all the tip labels)
 
-names(tree_use$tip.labels[NUMBER] <- "New_Species")
-names(tree_use$tip.label[1] <- "Lestoros_inca")
+names(tree_use$tip.label[NUMBER] <- "New_Species")
+names(tree_use$tip.label[1]) <- "Caenoblabla"
 
+#to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
+namecheck=name.check(tree_use,GPA_mean$Csize)
 
-namecheck=name.check(tree_use,dimnames(Data)[[3]])
-
-Matchtest=match(tree[1]$tree_1$tip.label,dimnames(Data)[[3]])
+Matchtest=match(tree_use$tip.label,GPA_mean$coords)
 length(which(!is.na (Matchtest)))
 
 
