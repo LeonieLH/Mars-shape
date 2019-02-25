@@ -14,6 +14,7 @@ library(geomorph)
 library(ape)
 library(plyr)
 library(abind)
+library(geiger)
 
 ```
 #read in coordinates
@@ -39,7 +40,7 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   remove(i, filelist, names, k, coords, temp) # clean up environment
   
   #Double check that the 3D info is entered properly
-   plot3d(Data[,,5], asp=FALSE)
+  plot3d(Data[,,5], asp=FALSE)
   text3d(Data[,,5], texts=c(1:71))
 
 ```
@@ -65,7 +66,7 @@ plotRefToTarget(GPA$coords[,,14], GPA$coords[,,16], method="vector")
 PRTT=gridPar(pt.bg="green", pt.size = 1)
 
 plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
-plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector")
+plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
 
 
 ```
@@ -73,7 +74,7 @@ plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector")
 
 ```{r}
 MGD<-geomorph.data.frame(GPA)
-attributes(MGD)
+attributes(MGD) #Should be "coords" and "csize"
 
 MarAllo<-procD.allometry(GPA$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=MGD, iter=149, print.progress=FALSE)
 summary(MarAllo)
@@ -83,6 +84,13 @@ summary(MarAllo)
 #Try to get a stable tree code to work - find the phylogeny, try to read it in. I have some model code for you but try to use google and help files to see if you can read it in.
 
 ```{r}
+tree=read.nexus("D:/Github_projects/Mars-shape/Data/Raw/Mitchell_pruned.nex")
+plot(tree)
 
+namecheck=name.check(tree,Data)
+
+tree_synch=drop.tip(tree,namecheck$tree_not_data)
+
+name.check(tree_synch)
 
 ```
