@@ -23,11 +23,18 @@ library(geiger)
 #RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
 
 #This working directory needs to be set for this chunk because otherwise it won't find the files. It is an issue of rmd talking to R itself.
-setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates") #Vera's computer
+#setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates") #Vera's computer
 setwd("D:/Github_Projects/Mars-shape/Data/Raw/Coordinates")  #Leonie's computer
 
 
 filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
+
+#Next step is to remove the Museum IDs from the specimen names   
+  
+  tmp <- matrix(unlist(strsplit(filelist, "_")),ncol=3,byrow = TRUE)   
+
+  filelist_species <- paste(tmp[,1], tmp[,2], sep="_")
+  
   names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
   filelist <- paste("../Data/Raw/Coordinates/", filelist, sep="") # rename with path
   coords <- NULL # make empty object that will be filled with 3D array of coordinate data
@@ -36,13 +43,14 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
     k <- dim(temp)[1] 
     coords <- rbind(coords, two.d.array(temp)) }
   Data <- arrayspecs(coords, k, 3) 
-  dimnames(Data)[[3]] <- names
+  dimnames(Data)[[3]] <- filelist_species
   remove(i, filelist, names, k, coords, temp) # clean up environment
   
   #Double check that the 3D info is entered properly
   plot3d(Data[,,5], asp=FALSE)
   text3d(Data[,,5], texts=c(1:71))
 
+  
 ```
 
 #GPA - superimposing a group of shapes (removing all the differences in size/scale, orientation and location between this group of species) so that the only differences in the coordinates of corresponding landmarks between species must be the result of differences in shape between those species
@@ -61,12 +69,24 @@ dimnames(GPA$coords)[[3]]
 
 plotRefToTarget(GPA$coords[,,14], GPA$coords[,,16], method="vector")
 
-#Visualize main differences
+####~~~~~~~~~~Visualize main differences~~~~~~~~~~~~####
 #Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
 PRTT=gridPar(pt.bg="green", pt.size = 1)
 
 plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
 plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
+
+####~~~~~~~~~~~~AVERAGING REPLICATES~~~~~~~~~~~~~~~~~####
+#There are multiple specimens of the same species. This means they need to be averaged before continuing 
+
+# shape data
+ind.coords <- aggregate(two.d.array(GPA$coords) ~ dimnames(GPA$coords)[[3]], FUN=mean)[,-1]
+rownames(ind.coords) <- unique(dimnames(GPA$coords)[[3]])
+ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
+# centroid size data
+ind.Csize <- as.vector(aggregate(GPA$Csize ~ dimnames(GPA$coords)[[3]], FUN=mean)[,-1])
+names(ind.Csize) <- unique(dimnames(GPA$coords)[[3]])
+# ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
 
 
 ```
@@ -84,12 +104,27 @@ summary(MarAllo)
 #Try to get a stable tree code to work - find the phylogeny, try to read it in. I have some model code for you but try to use google and help files to see if you can read it in.
 
 ```{r}
-tree=read.nexus("D:/Github_projects/Mars-shape/Data/Raw/Mitchell_pruned.nex")
-plot(tree)
+#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
+#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
 
-namecheck=name.check(tree,Data)
+tree=read.nexus("D:/Github_projects/Mars-shape/Data/Raw/Mitchell_pruned_tree.nex")
+tree_use <- tree[1]$tree_1
 
-tree_synch=drop.tip(tree,namecheck$tree_not_data)
+###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label[166]  
+#This shows particular tip label (without the number present this code will provide you with all the tip labels)
+
+names(tree_use$tip.labels[NUMBER] <- "New_Species")
+names(tree_use$tip.label[1] <- "Lestoros_inca")
+
+
+namecheck=name.check(tree_use,dimnames(Data)[[3]])
+
+Matchtest=match(tree[1]$tree_1$tip.label,dimnames(Data)[[3]])
+length(which(!is.na (Matchtest)))
+
+
+tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
 
 name.check(tree_synch)
 
