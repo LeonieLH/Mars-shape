@@ -102,10 +102,10 @@ GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
 ```{r}
-MGD<-geomorph.data.frame(GPA)
+MGD<-geomorph.data.frame(GPA_mean)
 attributes(MGD) #Should be "coords" and "csize"
 
-MarAllo<-procD.allometry(GPA$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=MGD, iter=149, print.progress=FALSE)
+MarAllo<-procD.allometry(GPA_mean$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=MGD, iter=149, print.progress=FALSE)
 summary(MarAllo)
 
 ```
@@ -120,11 +120,22 @@ tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
 tree_use <- tree[1]$tree_1
 
 ###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label
 tree_use$tip.label[166]  
 #This shows particular tip label (without the number present this code will provide you with all the tip labels)
 
 names(tree_use$tip.label[NUMBER] <- "New_Species")
-names(tree_use$tip.label[1]) <- "Caenoblabla"
+
+names(tree_use$tip.label[5]) <- "Caluromys_derbianus"
+names(tree_use$tip.label[1]) <- "Lestoros_inca"
+names(tree_use$tip.label[5]) <- "Dendrolagus_inustus"
+names(tree_use$tip.label[5]) <- "Philander_andersoni"
+names(tree_use$tip.label[5]) <- "Lasiorhinus_krefftii"
+names(tree_use$tip.label[5]) <- "Phalanger_mimicus"
+names(tree_use$tip.label[5]) <- "Planigale_ingrami"
+names(tree_use$tip.label[5]) <- "Sminthopsis_murina"
+names(tree_use$tip.label[5]) <- "Sminthopsis_macroura"
+names(tree_use$tip.label[5]) <- "Thylamys_elegans"
 
 #to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
 namecheck=name.check(tree_use,GPA_mean$Csize)
