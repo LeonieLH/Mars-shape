@@ -51,6 +51,7 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   text3d(Data[,,5], texts=c(1:71))
 
   
+  
 ```
 
 #GPA - superimposing a group of shapes (removing all the differences in size/scale, orientation and location between this group of species) so that the only differences in the coordinates of corresponding landmarks between species must be the result of differences in shape between those species
@@ -149,3 +150,17 @@ tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
 name.check(tree_synch)
 
 ```
+
+#Create two partitions partitions
+```{r}
+### Import the  partition map
+part.gp=as.matrix(read.csv("Data/Raw/partitions.csv", header=FALSE))
+
+```
+
+#Compare evolutionary rates of partitiosn
+```{r}
+
+
+```
+
