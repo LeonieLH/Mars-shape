@@ -34,6 +34,7 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   tmp <- matrix(unlist(strsplit(filelist, "_")),ncol=3,byrow = TRUE)   
 
   filelist_species <- paste(tmp[,1], tmp[,2], sep="_")
+
   
   names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
   filelist <- paste("../Data/Raw/Coordinates/", filelist, sep="") # rename with path
@@ -53,6 +54,8 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   
   
 ```
+
+
 
 #GPA - superimposing a group of shapes (removing all the differences in size/scale, orientation and location between this group of species) so that the only differences in the coordinates of corresponding landmarks between species must be the result of differences in shape between those species
 ```{r}
@@ -83,7 +86,7 @@ plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag
 plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
 ```
 
-#AVERAGING REPLICATES
+#AVERAGING MULTIPLE SPECIMENS OF OEN SPECIES
 
 ```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
@@ -100,6 +103,15 @@ names(ind.Csize) <- unique(dimnames(GPA$coords)[[3]])
 GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 
 ```
+#Read in classifier file - 
+
+```{r}
+
+write.csv(names(ind.Csize), file="../Data/Raw/Species_list.csv", row.names=FALSE, col.names=FALSE)
+
+
+```
+
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
 ```{r}
