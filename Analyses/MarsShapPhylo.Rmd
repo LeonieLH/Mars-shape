@@ -62,29 +62,10 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
 #Run GPA
 GPA <- gpagen(Data)
 
-#Run PCA
-PCA <- plotTangentSpace(GPA$coords, label=dimnames(GPA$coords)[[3]])
-
-#PCA eigenvalues
-PCA$pc.summary$importance
-
-#If there is an obvious problem specimen, find out what number specimen it is on the GPA
-dimnames(GPA$coords)[[3]]
-
-plotRefToTarget(GPA$coords[,,6], GPA$coords[,,16], method="vector")
 
 ```
 
 
-# Visualize main differences
-```{r}
-
-#Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
-PRTT=gridPar(pt.bg="green", pt.size = 1)
-
-plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
-plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
-```
 
 #AVERAGING MULTIPLE SPECIMENS OF OEN SPECIES
 
@@ -111,6 +92,34 @@ write.csv(names(ind.Csize), file="../Data/Raw/Species_list.csv", row.names=FALSE
 
 
 ```
+# To understand WHAT, running a PCA. To understand WHAT, computing the PCA eigenvalues.
+### YOU HAVE TO MAKE SURE YOU ARE USING THE IND.COORDS NOT THE GPA COORDS HERE - WILL LET YOU DO THAT
+```{r}
+#Run PCA
+PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
+
+#PCA eigenvalues
+PCA$pc.summary$importance
+
+#If there is an obvious problem specimen, find out what number specimen it is on the GPA
+dimnames(GPA$coords)[[3]]
+
+plotRefToTarget(GPA$coords[,,6], GPA$coords[,,16], method="vector")
+
+```
+
+# Visualize main differences OF WHAT AND WHY? YOU MIGHT ALSO ADD SOME DESCRIPTION OF THE RESULTS HERE, WHICH YOU CAN LATER PUT INTO RESULTS SECTION.
+```{r}
+
+#Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
+PRTT=gridPar(pt.bg="green", pt.size = 1)
+
+plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
+plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
+```
+
+
+#TO UNDERSTAND/TEST...., TESTING FOR ALLLOMETRY (WHAT ABOUT ALLOMETRY ARE YOU TESTING?)
 
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
