@@ -67,7 +67,7 @@ GPA <- gpagen(Data)
 
 
 
-#AVERAGING MULTIPLE SPECIMENS OF OEN SPECIES
+#AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
 ```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
