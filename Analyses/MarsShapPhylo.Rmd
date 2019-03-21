@@ -8,6 +8,8 @@ output: html_document
 
 # load required libraries
 
+#I will be using the following R packages in these analyses; geomorph, ape, plyr, abind, and geiger.
+
 ```{r}
 
 library(geomorph)
@@ -18,6 +20,8 @@ library(geiger)
 
 ```
 #read in coordinates
+
+#Prior to investigating the three predictions of this study, I will input andprepare my data.
 ```{r}
 
 #RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
@@ -55,9 +59,10 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   
 ```
 
+#Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
+#This will make it possible to allow me to analyse their shape variation relative to each other
 
-
-#GPA - superimposing a group of shapes (removing all the differences in size/scale, orientation and location between this group of species) so that the only differences in the coordinates of corresponding landmarks between species must be the result of differences in shape between those species
+#GPA - 
 ```{r}
 #Run GPA
 GPA <- gpagen(Data)
@@ -68,6 +73,8 @@ GPA <- gpagen(Data)
 
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
+
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes (SHOULD I JUST AVERAGE THE SPECIES FIRST THEN GPA? WITHOUT DOING THE ABOVE GPA?)
 
 ```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
@@ -84,29 +91,42 @@ names(ind.Csize) <- unique(dimnames(GPA$coords)[[3]])
 GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 
 ```
-#Read in classifier file - 
+#Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade - 
 
 ```{r}
 
-write.csv(names(ind.Csize), file="../Data/Raw/Species_list.csv", row.names=FALSE, col.names=FALSE)
+write.csv(names(ind.Csize), file="../Data/Raw/Mars_classifier_list.csv", row.names=FALSE, col.names=FALSE)
+
+speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
 
 
 ```
+
+#Principal component analysis (PCA) is a technique used to emphasize variation and bring out strong patterns in a dataset. It's often used to make data easy to explore and visualize.
+#The PCA transformation ensures that the horizontal axis PC1 has the most variation, the vertical axis PC2 the second-most, and a third axis PC3 the least. Obviously, PC3 is the one we drop. (reason for looking at eigenvalues)
+
 # To understand WHAT, running a PCA. To understand WHAT, computing the PCA eigenvalues.
 ### YOU HAVE TO MAKE SURE YOU ARE USING THE IND.COORDS NOT THE GPA COORDS HERE - WILL LET YOU DO THAT
+
+#To understand the variation in shape between the marsupial species I will run a Principle Component Analysis (PCA). This analysis 
+
+#### RAN INTO A PROBLEM WITH THIS, WONT SHOWTHE SPECIES NAMES
 ```{r}
 #Run PCA
-PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
+PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$ind.coords)[[3]])
 
 #PCA eigenvalues
 PCA$pc.summary$importance
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
-dimnames(GPA$coords)[[3]]
+dimnames(GPA$ind.coords)[[3]]
 
-plotRefToTarget(GPA$coords[,,6], GPA$coords[,,16], method="vector")
+plotRefToTarget(GPA$ind.coords[,,6], GPA$ind.coords[,,16], method="vector")
 
 ```
+
+#PlotRefto target - Function plots shape differences between a reference and target specimen
+#vector: a plot showing the vector displacements between corresponding landmarks in the reference and target specimen is shown
 
 # Visualize main differences OF WHAT AND WHY? YOU MIGHT ALSO ADD SOME DESCRIPTION OF THE RESULTS HERE, WHICH YOU CAN LATER PUT INTO RESULTS SECTION.
 ```{r}
@@ -119,7 +139,8 @@ plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Ba
 ```
 
 
-#TO UNDERSTAND/TEST...., TESTING FOR ALLLOMETRY (WHAT ABOUT ALLOMETRY ARE YOU TESTING?)
+
+#TO UNDERSTAND/TEST...., TESTING FOR ALLOMETRY (WHAT ABOUT ALLOMETRY ARE YOU TESTING?)
 
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
