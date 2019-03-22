@@ -105,7 +105,9 @@ speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
 # To understand WHAT, running a PCA. To understand WHAT, computing the PCA eigenvalues.
 ### YOU HAVE TO MAKE SURE YOU ARE USING THE IND.COORDS NOT THE GPA COORDS HERE - WILL LET YOU DO THAT
 
-#To understand the main variation in shape between marsupial species I will run a Principle Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, The resulting 3D images will provide PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+#To understand the main variation in shape between marsupial species I will run a Principle Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+
+##would you do a PCA for habitat, diet and clade? 
 
 #### RAN INTO A PROBLEM WITH THIS, WONT SHOW THE SPECIES NAMES
 ```{r}
@@ -125,6 +127,8 @@ plotRefToTarget(GPA$ind.coords[,,6], GPA$ind.coords[,,16], method="vector")
 #PlotRefto target - Function plots shape differences between a reference and target specimen
 #vector: a plot showing the vector displacements between corresponding landmarks in the reference and target specimen is shown
 
+
+
 # Visualize main differences OF WHAT AND WHY? YOU MIGHT ALSO ADD SOME DESCRIPTION OF THE RESULTS HERE, WHICH YOU CAN LATER PUT INTO RESULTS SECTION.
 ```{r}
 
@@ -135,7 +139,7 @@ plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag
 plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
 ```
 
-
+To prevent confounding in further analyses I tested for allometry 
 
 #TO UNDERSTAND/TEST...., TESTING FOR ALLOMETRY (WHAT ABOUT ALLOMETRY ARE YOU TESTING?)
 
@@ -190,16 +194,24 @@ name.check(tree_synch)
 
 ```
 
-#Create two partitions partitions
+#Create two partitions
 ```{r}
 ### Import the  partition map
 part.gp=as.matrix(read.csv("Data/Raw/partitions.csv", header=FALSE))
 
 ```
 
-#Compare evolutionary rates of partitiosn
+#Compare evolutionary rates of partitions
 ```{r}
+res.evolrate1 <- compare.multi.evol.rates(coords, part.gp, trees[[1]], 
+                                          Subset = TRUE, iter = 1000)
 
 
 ```
 
+#
+
+```{r}
+
+
+```
