@@ -85,42 +85,50 @@ rownames(ind.coords) <- unique(dimnames(GPA$coords)[[3]])
 ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
 # centroid size data
 ind.Csize <- as.vector(aggregate(GPA$Csize ~ dimnames(GPA$coords)[[3]], FUN=mean)[,-1])
-names(ind.Csize) <- unique(dimnames(GPA$coords)[[3]])
+names(ind.Csize) <- unique(names(GPA$Csize))
 # ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
 
+#are dimnames identical i.e. will the aligned properly?
+dimnames(GPA$coords)[[3]]==names(GPA$Csize)
+
+dimnames(ind.coords)[[3]]==names(ind.Csize)
+
+#Turning into gdf frame and giving names
 GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+dimnames(GPA_mean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_mean$Csize) <- names(ind.Csize)
+
 
 ```
 #Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade - 
 
 ```{r}
 
-write.csv(names(ind.Csize), file="../Data/Raw/Mars_classifier_list.csv", row.names=FALSE, col.names=FALSE)
-
 speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
-
+rownames(speclist) <-speclist$Specimen
 
 ```
 
 # To understand WHAT, running a PCA. To understand WHAT, computing the PCA eigenvalues.
-### YOU HAVE TO MAKE SURE YOU ARE USING THE IND.COORDS NOT THE GPA COORDS HERE - WILL LET YOU DO THAT
 
 #To understand the main variation in shape between marsupial species I will run a Principle Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+
+#Each PC represents a particular aspect of the overall shape variation, 
 
 ##would you do a PCA for habitat, diet and clade? 
 
 #### RAN INTO A PROBLEM WITH THIS, WONT SHOW THE SPECIES NAMES
 ```{r}
 #Run PCA
-PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$ind.coords)[[3]])
+PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
 
-#PCA eigenvalues
+#PCA eigenvalues; The low PC eigenvalue shows that one aspect of the overall shape data cannot explain the majority of the variation. Visually the data is displayed across several orthogonal axes  
 PCA$pc.summary$importance
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
-dimnames(GPA$ind.coords)[[3]]
+dimnames(GPA$coords)[[3]]
 
-plotRefToTarget(GPA$ind.coords[,,6], GPA$ind.coords[,,16], method="vector")
+plotRefToTarget(GPA$coords[,,6], GPA$coords[,,16], method="vector")
 
 ```
 
@@ -145,12 +153,13 @@ To prevent confounding in further analyses I tested for allometry
 
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
-```{r}
-MGD<-geomorph.data.frame(GPA_mean)
-attributes(MGD) #Should be "coords" and "csize"
 
-MarAllo<-procD.allometry(GPA_mean$coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=MGD, iter=149, print.progress=FALSE)
-summary(MarAllo)
+#CHECK IF ALLOMETRY IS ONLY IN THE "REST OF SKULL" PARTITION
+
+```{r}
+
+Allom<-procD.allometry(coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
+summary(Allom)
 
 ```
 
@@ -182,6 +191,8 @@ names(tree_use$tip.label[5]) <- "Sminthopsis_macroura"
 names(tree_use$tip.label[5]) <- "Thylamys_elegans"
 
 #to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
+
+#NAVIGATE TO THE NAMES FOR THESE NAME CHECKS HAVE A LOOK FURTHER UP IN THE CODE
 namecheck=name.check(tree_use,GPA_mean$Csize)
 
 Matchtest=match(tree_use$tip.label,GPA_mean$coords)
@@ -190,14 +201,46 @@ length(which(!is.na (Matchtest)))
 
 tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
 
-name.check(tree_synch)
+name.check(tree_synch,gpa_M)
 
 ```
 
 #Create two partitions
 ```{r}
 ### Import the  partition map
-part.gp=as.matrix(read.csv("Data/Raw/partitions.csv", header=FALSE))
+part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
+
+```
+TEmporary rought code to make partitions show up 
+
+```{r}
+# Utilities based on existing functions
+
+#colouring partition spheres
+#@param land_data_partition the landmark data e.g. land_data$cranium
+#@param partnames is an optional vector with names for each partition number
+#@param PointSize is for changing the size of spheres plotted
+
+WomCrPart is your part.gp
+
+ #provides the numbers of the parts
+  PartLevels= unique(part.gp[,2])
+  Colours<-rainbow(length(PartLevels))
+  Colours <- c("blue", "orange", "green")
+  
+  ##subset the landmarks according to the partitions
+  for(i in 1:length(PartLevels)){
+    Part[[i]]<-which (WomCrPart[,2] == PartLevels[[i]])
+  }
+  
+  ##colours the spheres for each partition; Replace WomCrRef with any configuraiont e.g. mean specimen
+  open3d()
+  for (i in 1:length(PartLevels)){
+    spheres3d(SOMETHING_Cords as WomCrRef[Part[[i]],1], WomCrRef[Part[[i]],2], WomCrRef[Part[[i]],3], col=Colours[i], lit=TRUE,radius = PointSize, asp=F)
+    
+  }
+  
+}
 
 ```
 
