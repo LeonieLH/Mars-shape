@@ -70,11 +70,9 @@ GPA <- gpagen(Data)
 
 ```
 
-
-
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
-#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes (SHOULD I JUST AVERAGE THE SPECIES FIRST THEN GPA? WITHOUT DOING THE ABOVE GPA?)
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
 
 ```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
@@ -102,6 +100,7 @@ names(GPA_mean$Csize) <- names(ind.Csize)
 ```
 #Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade - 
 
+
 ```{r}
 
 speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
@@ -109,15 +108,12 @@ rownames(speclist) <-speclist$Specimen
 
 ```
 
-# To understand WHAT, running a PCA. To understand WHAT, computing the PCA eigenvalues.
-
 #To understand the main variation in shape between marsupial species I will run a Principle Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
 
-#Each PC represents a particular aspect of the overall shape variation, 
+#Each PC represents a particular aspect of the overall shape variation, see more in the chunk
 
 ##would you do a PCA for habitat, diet and clade? 
 
-#### RAN INTO A PROBLEM WITH THIS, WONT SHOW THE SPECIES NAMES
 ```{r}
 #Run PCA
 PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
@@ -126,15 +122,14 @@ PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
 PCA$pc.summary$importance
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
-dimnames(GPA$coords)[[3]]
+dimnames(GPA_mean$coords)[[3]]
 
-plotRefToTarget(GPA$coords[,,6], GPA$coords[,,16], method="vector")
+plotRefToTarget(GPA$coords[,,1], GPA$coords[,,48], method="vector")
 
 ```
 
 #PlotRefto target - Function plots shape differences between a reference and target specimen
 #vector: a plot showing the vector displacements between corresponding landmarks in the reference and target specimen is shown
-
 
 
 # Visualize main differences OF WHAT AND WHY? YOU MIGHT ALSO ADD SOME DESCRIPTION OF THE RESULTS HERE, WHICH YOU CAN LATER PUT INTO RESULTS SECTION.
@@ -147,7 +142,59 @@ plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag
 plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
 ```
 
-To prevent confounding in further analyses I tested for allometry 
+
+#Try to get a stable tree code to work - find the phylogeny, try to read it in. I have some model code for you but try to use google and help files to see if you can read it in.
+
+```{r}
+#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
+#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
+
+tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
+tree_use <- tree[1]$tree_1
+
+###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label
+tree_use$tip.label[5]  
+#This shows particular tip label (without the number present this code will provide you with all the tip labels)
+
+names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
+
+tree_use$tip.label[5] <- "Caluromys_derbianus"
+tree_use$tip.label[1] <- "Lestoros_inca"
+tree_use$tip.label[178] <- "Dendrolagus_inustus"
+tree_use$tip.label[30] <- "Philander_andersoni"
+tree_use$tip.label[124] <- "Phalanger_mimicus"
+tree_use$tip.label[66] <- "Planigale_ingrami"
+tree_use$tip.label[67] <- "Sminthopsis_murina"
+tree_use$tip.label[39] <- "Thylamys_elegans"
+tree_use$tip.label[20] <- "Marmosa_demerarae"
+tree_use$tip.label[19] <- "Marmosa_alstoni"
+tree_use$tip.label[130] <- "Petaurus_australis"
+#to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
+
+#NAVIGATE TO THE NAMES FOR THESE NAME CHECKS HAVE A LOOK FURTHER UP IN THE CODE
+namecheck=name.check(tree_use,GPA_mean$Csize)
+
+Matchtest=match(tree_use$tip.label,GPA_mean$Csize)
+length(which(!is.na (Matchtest)))
+
+
+tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
+
+name.check(tree_synch,GPA_mean$Csize)
+
+```
+
+#Create two partitions
+```{r}
+### Import the  partition map
+part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
+
+```
+
+Allometry in geometric morphometrics refers to size-related changes of morphological traits. 
+e.g. does brain size increase as body size increases?
+looking at overall shape however
 
 #TO UNDERSTAND/TEST...., TESTING FOR ALLOMETRY (WHAT ABOUT ALLOMETRY ARE YOU TESTING?)
 
@@ -163,54 +210,6 @@ summary(Allom)
 
 ```
 
-#Try to get a stable tree code to work - find the phylogeny, try to read it in. I have some model code for you but try to use google and help files to see if you can read it in.
-
-```{r}
-#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
-#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
-
-tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
-tree_use <- tree[1]$tree_1
-
-###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
-tree_use$tip.label
-tree_use$tip.label[166]  
-#This shows particular tip label (without the number present this code will provide you with all the tip labels)
-
-names(tree_use$tip.label[NUMBER] <- "New_Species")
-
-names(tree_use$tip.label[5]) <- "Caluromys_derbianus"
-names(tree_use$tip.label[1]) <- "Lestoros_inca"
-names(tree_use$tip.label[5]) <- "Dendrolagus_inustus"
-names(tree_use$tip.label[5]) <- "Philander_andersoni"
-names(tree_use$tip.label[5]) <- "Lasiorhinus_krefftii"
-names(tree_use$tip.label[5]) <- "Phalanger_mimicus"
-names(tree_use$tip.label[5]) <- "Planigale_ingrami"
-names(tree_use$tip.label[5]) <- "Sminthopsis_murina"
-names(tree_use$tip.label[5]) <- "Sminthopsis_macroura"
-names(tree_use$tip.label[5]) <- "Thylamys_elegans"
-
-#to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
-
-#NAVIGATE TO THE NAMES FOR THESE NAME CHECKS HAVE A LOOK FURTHER UP IN THE CODE
-namecheck=name.check(tree_use,GPA_mean$Csize)
-
-Matchtest=match(tree_use$tip.label,GPA_mean$coords)
-length(which(!is.na (Matchtest)))
-
-
-tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
-
-name.check(tree_synch,gpa_M)
-
-```
-
-#Create two partitions
-```{r}
-### Import the  partition map
-part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
-
-```
 TEmporary rought code to make partitions show up 
 
 ```{r}
