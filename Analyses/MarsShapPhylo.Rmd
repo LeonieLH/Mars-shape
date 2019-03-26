@@ -74,6 +74,8 @@ GPA <- gpagen(Data)
 
 #Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
 
+#Remember= dim() is the dimensions of an object
+
 ```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
 
@@ -98,6 +100,7 @@ names(GPA_mean$Csize) <- names(ind.Csize)
 
 
 ```
+
 #Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade - 
 
 
@@ -191,6 +194,41 @@ name.check(tree_synch,GPA_mean$Csize)
 part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
 
 ```
+TEmporary rought code to make partitions show up 
+
+The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
+
+Having trouble with subsetting the landmarks to the partitions
+
+```{r}
+# Utilities based on existing functions
+
+#colouring partition spheres
+#@param land_data_partition the landmark data e.g. land_data$cranium
+#@param partnames is an optional vector with names for each partition number
+#@param PointSize is for changing the size of spheres plotted
+
+#WomCrPart is your part.gp
+
+ #provides the numbers of the parts
+  PartLevels = unique(part.gp[,1])
+  Colours<-rainbow(length(PartLevels))
+  Colours <- c("blue", "orange")
+  
+  Part=list()
+  ##subset the landmarks according to the partitions
+  for(i in 1:length(PartLevels)){
+    Part[[i]]<-which (part.gp[,2] == PartLevels[[i]])
+  }
+  
+  ##colours the spheres for each partition; Replace WomCrRef with any configuraiont e.g. mean specimen
+  open3d()
+  for (i in 1:length(PartLevels)){
+    spheres3d(part.gp[Part[[i]],1], GPA_mean$coords[Part[[i]],3], col=Colours[i], lit=TRUE, radius = 0.2, asp=F)
+    
+  }
+
+```
 
 Allometry in geometric morphometrics refers to size-related changes of morphological traits. 
 e.g. does brain size increase as body size increases?
@@ -208,52 +246,64 @@ looking at overall shape however
 Allom<-procD.allometry(coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
 summary(Allom)
 
-```
 
-TEmporary rought code to make partitions show up 
-
-```{r}
-# Utilities based on existing functions
-
-#colouring partition spheres
-#@param land_data_partition the landmark data e.g. land_data$cranium
-#@param partnames is an optional vector with names for each partition number
-#@param PointSize is for changing the size of spheres plotted
-
-WomCrPart is your part.gp
-
- #provides the numbers of the parts
-  PartLevels= unique(part.gp[,2])
-  Colours<-rainbow(length(PartLevels))
-  Colours <- c("blue", "orange", "green")
-  
-  ##subset the landmarks according to the partitions
-  for(i in 1:length(PartLevels)){
-    Part[[i]]<-which (WomCrPart[,2] == PartLevels[[i]])
-  }
-  
-  ##colours the spheres for each partition; Replace WomCrRef with any configuraiont e.g. mean specimen
-  open3d()
-  for (i in 1:length(PartLevels)){
-    spheres3d(SOMETHING_Cords as WomCrRef[Part[[i]],1], WomCrRef[Part[[i]],2], WomCrRef[Part[[i]],3], col=Colours[i], lit=TRUE,radius = PointSize, asp=F)
-    
-  }
-  
-}
 
 ```
+
+
 
 #Compare evolutionary rates of partitions
+
+There are four partitions but you only set up 3 of these res.evolrate codes (see your code). Do I use 1 if I have 2 partitions?
 ```{r}
-res.evolrate1 <- compare.multi.evol.rates(coords, part.gp, trees[[1]], 
+#### SHAPE RATE ANALYSES
+### Compare evolutionary rates between partitions
+# Calculate rates for each partition
+
+parevo.rate <- compare.multi.evol.rates(GPA_mean, part.gp, tree_synch, 
                                           Subset = TRUE, iter = 1000)
 
+# The above analysis gives only the rate for the four partitions
 
+
+
+# To calculate which partitions are different from each other we need to do a post-hoc pairwise analysis:
+res.multirate <- matrix(NA,ncol=4, nrow=4, 
+                        dimnames = list(c("OB","Cerebr","Cerebell","BS"),
+                                        c("OB","Cerebr","Cerebell","BS"))) 
+res.multirate <- list(Tree1 = res.multirate,Tree2 = res.multirate,
+                      Tree3=res.multirate)
+for(ii in 1:3){
+  for(i in 1:4){
+    for(j in 1:4){
+      if( i!=j){
+        coords.tmp <- abind(coords[which(part.gp==i),,], 
+                            coords[which(part.gp==j),,], along=1)
+        part.gp.tmp <- c(part.gp[which(part.gp==i)], 
+                         part.gp[which(part.gp==j)] )
+        tmp <-compare.multi.evol.rates(coords.tmp, part.gp.tmp, trees[[ii]],
+                                       Subset = TRUE, iter=iter)
+        res.multirate[[ii]][i,j] <-tmp$sigma.d.ratio # puts rate ratio in lower tri
+        res.multirate[[ii]][j,i] <-tmp$P.value # puts the Pvalue in the upper tri
+      }}}} # for each partition (as i and j), when the two partitions are not the same (if(i!=j))
+remove(tmp, coords.tmp, part.gp.tmp, ii, i, j)
+res.multirate
 ```
 
 #
 
 ```{r}
+####~~~~~~~~~~~~PHYLOGENETIC ANALYSES~~~~~~~~~~~~~~~~~####
+
+# how much of the shape variation can be explained by phylogeny? 
+# We can address this simply as first using a linear model of shape and a taxonomic grouping variable, here the clades
+
+procD.lm(coords ~ sp.SpecData.Cladename, data=gdf) # brain shape vs clade
+procD.lm(log(Csize) ~ sp.SpecData.Cladename, data=gdf) # brain size vs clade
+
+
+physignal(coords, trees$Tree1)
+physignal(log(Csize), trees$Tree1)
 
 
 ```
