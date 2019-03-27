@@ -11,7 +11,7 @@ output: html_document
 #I will be using the following R packages in these analyses; geomorph, ape, plyr, abind, and geiger.
 
 ```{r}
-
+library(rgl)
 library(geomorph)
 library(ape)
 library(plyr)
@@ -148,6 +148,8 @@ plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Ba
 
 #Try to get a stable tree code to work - find the phylogeny, try to read it in. I have some model code for you but try to use google and help files to see if you can read it in.
 
+names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
+
 ```{r}
 #All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
 #I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
@@ -159,8 +161,6 @@ tree_use <- tree[1]$tree_1
 tree_use$tip.label
 tree_use$tip.label[5]  
 #This shows particular tip label (without the number present this code will provide you with all the tip labels)
-
-names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
 
 tree_use$tip.label[5] <- "Caluromys_derbianus"
 tree_use$tip.label[1] <- "Lestoros_inca"
@@ -193,12 +193,21 @@ name.check(tree_synch,GPA_mean$Csize)
 ### Import the  partition map
 part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
 
+#Creating the two partitions 
+  
+basi <- GPA_mean$coords[which(part.gp==2), , ]
+
+
+reskull <-GPA_mean$coords[which(part.gp==1), , ]
+
+  #When this is plotted, pink and purple dots have been requested 
+
+
 ```
-TEmporary rought code to make partitions show up 
+TEmporary rough code to make partitions show up 
 
 The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
 
-Having trouble with subsetting the landmarks to the partitions
 
 ```{r}
 # Utilities based on existing functions
@@ -228,11 +237,6 @@ Having trouble with subsetting the landmarks to the partitions
     
   }
   
-  basi <- ind.coords[which(part.gp==2), , ]
-  reskull <-ind.coords[which(part.gp==1), , ]
-  
-  #When this is plotted, pink and purple dots have been requested 
-
 ```
 
 Allometry in geometric morphometrics refers to size-related changes of morphological traits. 
@@ -247,11 +251,12 @@ looking at overall shape however
 #CHECK IF ALLOMETRY IS ONLY IN THE "REST OF SKULL" PARTITION
 
 ```{r}
-
-Allom<-procD.allometry(coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
+#Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
+Allom<-procD.lm(coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
 summary(Allom)
 
-
+AllBasi<-procD.lm(coords~Csize, data=, iter=1000, print.progress=FALSE)
+summary(AllBasi)
 
 ```
 
