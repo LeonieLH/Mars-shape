@@ -127,7 +127,7 @@ PCA$pc.summary$importance
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
 dimnames(GPA_mean$coords)[[3]]
 
-plotRefToTarget(GPA$coords[,,34], GPA$coords[,,33], method="vector")
+plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
 
 ```
 
