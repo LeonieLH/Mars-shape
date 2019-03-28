@@ -54,9 +54,8 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   #Double check that the 3D info is entered properly
   plot3d(Data[,,5], asp=FALSE)
   text3d(Data[,,5], texts=c(1:71))
-
   
-  
+ 
 ```
 
 #Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
@@ -129,6 +128,8 @@ dimnames(GPA_mean$coords)[[3]]
 
 plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
 
+plot(PCA$pc.scores[,1], GPA_mean$Csize)
+
 ```
 
 #PlotRefto target - Function plots shape differences between a reference and target specimen
@@ -189,6 +190,8 @@ name.check(tree_synch,GPA_mean$Csize)
 ```
 
 #Create two partitions
+
+#IF YOU RUN INTO A PROBLEM, FIRST CHECK IF ALL THE DATA HAVE READ IN PROPERLY - THERE WERE TWO ISSUES WITH PART.GP, ONE WAS THAT THE FIRST ROW CONTAINED WEIRD CHARACTERS AND THE SECOND WAS THAT IT CONTAINED HEAPS OF COLUMNS WITH JUST NAS. BOTH ARE FIXED NOW
 ```{r}
 ### Import the  partition map
 part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
@@ -210,32 +213,31 @@ The landmark dataset will now be split into two partitions; basicranium and the 
 
 
 ```{r}
-# Utilities based on existing functions
-
-#colouring partition spheres
-#@param land_data_partition the landmark data e.g. land_data$cranium
-#@param partnames is an optional vector with names for each partition number
-#@param PointSize is for changing the size of spheres plotted
-
-#WomCrPart is your part.gp
+#colouring partition spheres CHANGE THESE TO WHAT IT IS HERE SO YOU KNOW WHAT IS GOING ON
 
  #provides the numbers of the parts
   PartLevels = unique(part.gp[,1])
-  Colours<-rainbow(length(PartLevels))
-  Colours <- c("blue", "orange")
+  #colour scheme ;-)
+  Colours <- c("hotpink", "purple")
+ #Make mean shape that the points can be plotted on
+  Ref=mshape(GPA_mean$coords)
   
   Part=list()
   ##subset the landmarks according to the partitions
   for(i in 1:length(PartLevels)){
-    Part[[i]]<-which (part.gp[,2] == PartLevels[[i]])
+    Part[[i]]<-which (part.gp[,1] == PartLevels[[i]])
   }
   
-  ##colours the spheres for each partition; Replace WomCrRef with any configuraiont e.g. mean specimen
+  ##colours the spheres for each partition on the mean shape
+  
   open3d()
+  
   for (i in 1:length(PartLevels)){
-    spheres3d(part.gp[Part[[i]],1], GPA_mean$coords[Part[[i]],3], col=Colours[i], lit=TRUE, radius = 0.2, asp=F)
+    spheres3d( Ref[Part[[i]],], col=Colours[i], lit=TRUE, radius = 0.003, asp=F)
     
   }
+  
+plot(Ref)
   
 ```
 
@@ -252,8 +254,11 @@ looking at overall shape however
 
 ```{r}
 #Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
-Allom<-procD.lm(coords~Csize, f2=NULL, f3=NULL, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
+Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
 summary(Allom)
+
+summary(procD.lm(coords~Csize,  data=GPA_mean, logsz=TRUE,iter=10000, print.progress=TRUE))
+
 
 AllBasi<-procD.lm(coords~Csize, data=, iter=1000, print.progress=FALSE)
 summary(AllBasi)
