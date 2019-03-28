@@ -130,6 +130,11 @@ plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
 
 plot(PCA$pc.scores[,1], GPA_mean$Csize)
 
+#FOR CSIZE CHECKING
+Csizeorder<-sort(GPA_mean$Csize, decreasing=TRUE)
+Csizeorder
+
+
 ```
 
 #PlotRefto target - Function plots shape differences between a reference and target specimen
