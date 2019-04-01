@@ -68,7 +68,7 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
 #GPA - 
 ```{r}
 #Run GPA
-GPA <- gpagen(Data)
+GPA_AllSpecimens <- gpagen(Data)
 
 
 ```
@@ -121,21 +121,29 @@ rownames(speclist) <-speclist$Specimen
 ##would you do a PCA for habitat, diet and clade? 
 
 ```{r}
+#Checking if all specimens are read in properly with their Csizes
+PCA_all <- plotTangentSpace(GPA_AllSpecimens$coords, label=dimnames(GPA_AllSpecimens$coords)[[3]])
+
+plot(PCA_all$pc.scores[,1]~GPA_AllSpecimens$Csize ); text(PCA_all$pc.scores[,1]~GPA_AllSpecimens$Csize, labels=names(GPA_AllSpecimens$Csize))
+
+#Obtain lmk distances between nose and back of head
+Distances=interlmkdist(Data, matrix( c(1,4), ncol = 2, byrow=TRUE))
+
+
+
 #Run PCA
-PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
-PCA <- plotTangentSpace(GPA$coords, label=dimnames(GPA$coords)[[3]])
-#PCA eigenvalues; The low PC eigenvalue shows that one aspect of the overall shape data cannot explain the majority of the variation. Visually the data is displayed across several orthogonal axes  
-PCA$pc.summary$importance
+PCA_mean <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
+
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
 dimnames(GPA_mean$coords)[[3]]
 
 plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
 
-plot(PCA$pc.scores[,1], GPA_mean$Csize)
+plot(PCA_all$pc.scores[,1]~ log(GPA$Csize));text(PCA_all$pc.scores[,1]~ log(GPA$Csize), labels=names(GPA$Csize))
 
 #FOR CSIZE CHECKING
-Csizeorder<-sort(GPA_mean$Csize, decreasing=TRUE)
+Csizeorder<-sort(log(GPA_mean$Csize), decreasing=TRUE)
 Csizeorder
 
 Csizeorder<-sort(GPA$Csize, decreasing=TRUE)
