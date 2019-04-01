@@ -140,7 +140,7 @@ dimnames(GPA_mean$coords)[[3]]
 
 plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
 
-plot(PCA_all$pc.scores[,1]~ log(GPA$Csize));text(PCA_all$pc.scores[,1]~ log(GPA$Csize), labels=names(GPA$Csize))
+plot(PCA_all$pc.scores[,1]~ log(GPA_AllSpecimens$Csize));text(PCA_all$pc.scores[,1]~ log(GPA_AllSpecimens$Csize), labels=names(GPA_AllSpecimens$Csize))
 
 #FOR CSIZE CHECKING
 Csizeorder<-sort(log(GPA_mean$Csize), decreasing=TRUE)
