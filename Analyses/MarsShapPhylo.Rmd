@@ -3,6 +3,8 @@ title: "Marsupial shape and phylogenetics"
 author: "Leonie Lange-Hodgson"
 date: "22 January 2019"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 
@@ -12,16 +14,18 @@ output: html_document
 
 ```{r}
 library(rgl)
+library(RRPP)
 library(geomorph)
 library(ape)
 library(plyr)
 library(abind)
 library(geiger)
 
+
 ```
 #read in coordinates
 
-#Prior to investigating the three predictions of this study, I will input andprepare my data.
+#Prior to investigating the three predictions of this study, I will input and prepare my data.
 ```{r}
 
 #RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
@@ -119,7 +123,7 @@ rownames(speclist) <-speclist$Specimen
 ```{r}
 #Run PCA
 PCA <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
-
+PCA <- plotTangentSpace(GPA$coords, label=dimnames(GPA$coords)[[3]])
 #PCA eigenvalues; The low PC eigenvalue shows that one aspect of the overall shape data cannot explain the majority of the variation. Visually the data is displayed across several orthogonal axes  
 PCA$pc.summary$importance
 
@@ -134,6 +138,17 @@ plot(PCA$pc.scores[,1], GPA_mean$Csize)
 Csizeorder<-sort(GPA_mean$Csize, decreasing=TRUE)
 Csizeorder
 
+Csizeorder<-sort(GPA$Csize, decreasing=TRUE)
+Csizeorder
+
+#you might need to paste this into the r console
+labels = names(GPA_mean$Csize)
+plot(PCA$pc.scores[,1]~GPA_mean$Csize ); 
+text(PCA$pc.scores[,1]~GPA_mean$Csize, labels=names(GPA_mean$Csize))
+
+labels = names(GPA$Csize)
+plot(PCA$pc.scores[,1]~GPA$Csize ); 
+text(PCA$pc.scores[,1]~GPA$Csize, labels=names(GPA$Csize))
 
 ```
 
