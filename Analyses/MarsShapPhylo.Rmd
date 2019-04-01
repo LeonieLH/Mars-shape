@@ -83,16 +83,16 @@ GPA_AllSpecimens <- gpagen(Data)
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
 
 # shape data
-ind.coords <- aggregate(two.d.array(GPA$coords) ~ dimnames(GPA$coords)[[3]], FUN=mean)[,-1]
-rownames(ind.coords) <- unique(dimnames(GPA$coords)[[3]])
+ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
+rownames(ind.coords) <- unique(dimnames(GPA_AllSpecimens$coords)[[3]])
 ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
 # centroid size data
-ind.Csize <- as.vector(aggregate(GPA$Csize ~ dimnames(GPA$coords)[[3]], FUN=mean)[,-1])
-names(ind.Csize) <- unique(names(GPA$Csize))
+ind.Csize <- as.vector(aggregate(GPA_AllSpecimens$Csize ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1])
+names(ind.Csize) <- unique(names(GPA_AllSpecimens$Csize))
 # ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
 
 #are dimnames identical i.e. will the aligned properly?
-dimnames(GPA$coords)[[3]]==names(GPA$Csize)
+dimnames(GPA_AllSpecimens$coords)[[3]]==names(GPA_AllSpecimens$Csize)
 
 dimnames(ind.coords)[[3]]==names(ind.Csize)
 
@@ -151,8 +151,7 @@ Csizeorder
 
 #you might need to paste this into the r console
 labels = names(GPA_mean$Csize)
-plot(PCA$pc.scores[,1]~GPA_mean$Csize ); 
-text(PCA$pc.scores[,1]~GPA_mean$Csize, labels=names(GPA_mean$Csize))
+plot(PCA_all$pc.scores[,1]~GPA_mean$Csize ); text(PCA_all$pc.scores[,1]~GPA_mean$Csize, labels=names(GPA_mean$Csize))
 
 labels = names(GPA$Csize)
 plot(PCA$pc.scores[,1]~GPA$Csize ); 
@@ -282,10 +281,10 @@ looking at overall shape however
 
 ```{r}
 #Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
-Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
+Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_AllSpecimens, iter=10000, print.progress=FALSE)
 summary(Allom)
 
-summary(procD.lm(coords~Csize,  data=GPA_mean, logsz=TRUE,iter=10000, print.progress=TRUE))
+summary(procD.lm(coords~Csize,  data=GPA_AllSpecimens, logsz=TRUE,iter=10000, print.progress=TRUE))
 
 
 AllBasi<-procD.lm(coords~Csize, data=, iter=1000, print.progress=FALSE)
