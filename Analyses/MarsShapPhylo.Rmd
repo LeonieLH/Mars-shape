@@ -126,36 +126,17 @@ PCA_all <- plotTangentSpace(GPA_AllSpecimens$coords, label=dimnames(GPA_AllSpeci
 
 plot(PCA_all$pc.scores[,1]~GPA_AllSpecimens$Csize ); text(PCA_all$pc.scores[,1]~GPA_AllSpecimens$Csize, labels=names(GPA_AllSpecimens$Csize))
 
-#Obtain lmk distances between nose and back of head
-Distances=interlmkdist(Data, matrix( c(1,4), ncol = 2, byrow=TRUE))
-
-
 
 #Run PCA
 PCA_mean <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
 
+plot(PCA_mean$pc.scores[,1]~GPA_mean$Csize ); text(PCA_mean$pc.scores[,1]~GPA_mean$Csize, labels=names(GPA_mean$Csize))
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
 dimnames(GPA_mean$coords)[[3]]
 
 plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
 
-plot(PCA_all$pc.scores[,1]~ log(GPA_AllSpecimens$Csize));text(PCA_all$pc.scores[,1]~ log(GPA_AllSpecimens$Csize), labels=names(GPA_AllSpecimens$Csize))
-
-#FOR CSIZE CHECKING
-Csizeorder<-sort(log(GPA_mean$Csize), decreasing=TRUE)
-Csizeorder
-
-Csizeorder<-sort(GPA$Csize, decreasing=TRUE)
-Csizeorder
-
-#you might need to paste this into the r console
-labels = names(GPA_mean$Csize)
-plot(PCA_all$pc.scores[,1]~GPA_mean$Csize ); text(PCA_all$pc.scores[,1]~GPA_mean$Csize, labels=names(GPA_mean$Csize))
-
-labels = names(GPA$Csize)
-plot(PCA$pc.scores[,1]~GPA$Csize ); 
-text(PCA$pc.scores[,1]~GPA$Csize, labels=names(GPA$Csize))
 
 ```
 
@@ -169,14 +150,13 @@ text(PCA$pc.scores[,1]~GPA$Csize, labels=names(GPA$Csize))
 #Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
 PRTT=gridPar(pt.bg="green", pt.size = 1)
 
-plotRefToTarget(PCA$pc.shapes$PC1min, PCA$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
-plotRefToTarget(PCA$pc.shapes$PC2min, PCA$pc.shapes$PC2max, method="vector") #Back to standard grey
+plotRefToTarget(PCA_mean$pc.shapes$PC1min, PCA_mean$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
+plotRefToTarget(PCA_mean$pc.shapes$PC2min, PCA_mean$pc.shapes$PC2max, method="vector") #Back to standard grey
 ```
 
+#TREE PHYLOGENY 
 
-#Try to get a stable tree code to work - find the phylogeny, try to read it in. I have some model code for you but try to use google and help files to see if you can read it in.
-
-names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
+#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
 
 ```{r}
 #All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
@@ -218,6 +198,9 @@ name.check(tree_synch,GPA_mean$Csize)
 
 #Create two partitions
 
+The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
+
+
 #IF YOU RUN INTO A PROBLEM, FIRST CHECK IF ALL THE DATA HAVE READ IN PROPERLY - THERE WERE TWO ISSUES WITH PART.GP, ONE WAS THAT THE FIRST ROW CONTAINED WEIRD CHARACTERS AND THE SECOND WAS THAT IT CONTAINED HEAPS OF COLUMNS WITH JUST NAS. BOTH ARE FIXED NOW
 ```{r}
 ### Import the  partition map
@@ -228,15 +211,16 @@ part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
 basi <- GPA_mean$coords[which(part.gp==2), , ]
 
 
+basiland <-geomorph.data.frame(coords=basi, Csize=ind.Csize)
+dimnames(GPA_mean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_mean$Csize) <- names(ind.Csize)
+
 reskull <-GPA_mean$coords[which(part.gp==1), , ]
 
-  #When this is plotted, pink and purple dots have been requested 
 
 
 ```
-TEmporary rough code to make partitions show up 
-
-The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
+Temporary rough code to make partitions show up 
 
 
 ```{r}
@@ -263,8 +247,7 @@ The landmark dataset will now be split into two partitions; basicranium and the 
     spheres3d( Ref[Part[[i]],], col=Colours[i], lit=TRUE, radius = 0.003, asp=F)
     
   }
-  
-plot(Ref)
+
   
 ```
 
@@ -281,10 +264,10 @@ looking at overall shape however
 
 ```{r}
 #Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
-Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_AllSpecimens, iter=10000, print.progress=FALSE)
+Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
 summary(Allom)
 
-summary(procD.lm(coords~Csize,  data=GPA_AllSpecimens, logsz=TRUE,iter=10000, print.progress=TRUE))
+summary(procD.lm(coords~Csize,  data=GPA_mean, logsz=TRUE,iter=10000, print.progress=TRUE))
 
 
 AllBasi<-procD.lm(coords~Csize, data=, iter=1000, print.progress=FALSE)
