@@ -65,13 +65,12 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
 #Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
 #This will make it possible to allow me to analyse their shape variation relative to each other
 
-#GPA - 
+
+#GPA for all coordinates
 ```{r}
 #Run GPA
 GPA_AllSpecimens <- gpagen(Data)
 
-
-```
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
@@ -79,7 +78,6 @@ GPA_AllSpecimens <- gpagen(Data)
 
 #Remember= dim() is the dimensions of an object
 
-```{r}
 #There are multiple specimens of the same species. This means they need to be averaged before continuing 
 
 # shape data
@@ -103,6 +101,52 @@ names(GPA_mean$Csize) <- names(ind.Csize)
 
 
 ```
+#run GPA for basicranial lms
+```{r}
+#Subset basicranial lms
+Data_basi=Data[which(part.gp==2),,]
+#double-check that the correct number of landmarks has been subtracted
+attributes(Data_basi)
+
+KEEP GOING BELOW TO DO GPA AND AVERAGE MULTIPLE SPECIMENS THEN DO SEPARATE ALLOMETRY PHYSIGNAL, DIET AND LOCOMOTION PGLS ANALYSES.
+
+
+
+GPA_AllSpecimens <- gpagen(Data)
+
+
+#AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
+
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
+
+#Remember= dim() is the dimensions of an object
+
+#There are multiple specimens of the same species. This means they need to be averaged before continuing 
+
+# shape data
+ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
+rownames(ind.coords) <- unique(dimnames(GPA_AllSpecimens$coords)[[3]])
+ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
+# centroid size data
+ind.Csize <- as.vector(aggregate(GPA_AllSpecimens$Csize ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1])
+names(ind.Csize) <- unique(names(GPA_AllSpecimens$Csize))
+# ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
+
+#are dimnames identical i.e. will the aligned properly?
+dimnames(GPA_AllSpecimens$coords)[[3]]==names(GPA_AllSpecimens$Csize)
+
+dimnames(ind.coords)[[3]]==names(ind.Csize)
+
+#Turning into gdf frame and giving names
+GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+dimnames(GPA_mean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_mean$Csize) <- names(ind.Csize)
+
+
+
+
+
+
 
 #Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade - 
 
@@ -203,17 +247,20 @@ The landmark dataset will now be split into two partitions; basicranium and the 
 
 #IF YOU RUN INTO A PROBLEM, FIRST CHECK IF ALL THE DATA HAVE READ IN PROPERLY - THERE WERE TWO ISSUES WITH PART.GP, ONE WAS THAT THE FIRST ROW CONTAINED WEIRD CHARACTERS AND THE SECOND WAS THAT IT CONTAINED HEAPS OF COLUMNS WITH JUST NAS. BOTH ARE FIXED NOW
 ```{r}
-### Import the  partition map
-part.gp=as.matrix(read.csv("../Data/Raw/partitions.csv", header=FALSE))
-
+### Import the  partition map, ensure it's a factor
+part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
+part.gp=as.factor(part.gp$V1)
 #Creating the two partitions 
   
 basi <- GPA_mean$coords[which(part.gp==2), , ]
+basiCsize <- GPA_mean$Csize
 
+basiland <-geomorph.data.frame(coords=basi, Csize=basiCsize)
+dimnames(basiland$coords)[[3]] <-dimnames(GPA_mean$coords)[[3]]
+names(basiland$Csize) <- names(GPA_mean$Csize)
 
-basiland <-geomorph.data.frame(coords=basi, Csize=ind.Csize)
-dimnames(GPA_mean$coords)[[3]] <-dimnames(ind.coords)[[3]]
-names(GPA_mean$Csize) <- names(ind.Csize)
+#Must return all TRUE
+names(basiland$Csize)==dimnames(basiland$coords)[[3]]
 
 reskull <-GPA_mean$coords[which(part.gp==1), , ]
 
@@ -227,7 +274,7 @@ Temporary rough code to make partitions show up
 #colouring partition spheres CHANGE THESE TO WHAT IT IS HERE SO YOU KNOW WHAT IS GOING ON
 
  #provides the numbers of the parts
-  PartLevels = unique(part.gp[,1])
+  PartLevels = unique(part.gp[])
   #colour scheme ;-)
   Colours <- c("hotpink", "purple")
  #Make mean shape that the points can be plotted on
@@ -236,7 +283,7 @@ Temporary rough code to make partitions show up
   Part=list()
   ##subset the landmarks according to the partitions
   for(i in 1:length(PartLevels)){
-    Part[[i]]<-which (part.gp[,1] == PartLevels[[i]])
+    Part[[i]]<-which (part.gp[] == PartLevels[[i]])
   }
   
   ##colours the spheres for each partition on the mean shape
@@ -270,14 +317,14 @@ summary(Allom)
 summary(procD.lm(coords~Csize,  data=GPA_mean, logsz=TRUE,iter=10000, print.progress=TRUE))
 
 
-AllBasi<-procD.lm(coords~Csize, data=, iter=1000, print.progress=FALSE)
+AllBasi<-procD.lm(coords~Csize, data=basiland, iter=1000, print.progress=FALSE)
 summary(AllBasi)
 
 ```
 
 
 
-#Compare evolutionary rates of partitions
+#Compare evolutionary rates of partitions and phylogenetic signal
 
 There are four partitions but you only set up 3 of these res.evolrate codes (see your code). Do I use 1 if I have 2 partitions?
 ```{r}
@@ -285,50 +332,16 @@ There are four partitions but you only set up 3 of these res.evolrate codes (see
 ### Compare evolutionary rates between partitions
 # Calculate rates for each partition
 
-parevo.rate <- compare.multi.evol.rates(GPA_mean, part.gp, tree_synch, 
-                                          Subset = TRUE, iter = 1000)
 
-# The above analysis gives only the rate for the four partitions
+parevo.rate <- 
+  compare.multi.evol.rates(GPA_mean$coords,  part.gp, tree_synch,iter = 1000)
+
+# Does phylogenetic signal differ? do for the other two as well and csize
+
+physignal(GPA_mean$coords, tree_synch, iter = 1000)
 
 
 
-# To calculate which partitions are different from each other we need to do a post-hoc pairwise analysis:
-res.multirate <- matrix(NA,ncol=4, nrow=4, 
-                        dimnames = list(c("OB","Cerebr","Cerebell","BS"),
-                                        c("OB","Cerebr","Cerebell","BS"))) 
-res.multirate <- list(Tree1 = res.multirate,Tree2 = res.multirate,
-                      Tree3=res.multirate)
-for(ii in 1:3){
-  for(i in 1:4){
-    for(j in 1:4){
-      if( i!=j){
-        coords.tmp <- abind(coords[which(part.gp==i),,], 
-                            coords[which(part.gp==j),,], along=1)
-        part.gp.tmp <- c(part.gp[which(part.gp==i)], 
-                         part.gp[which(part.gp==j)] )
-        tmp <-compare.multi.evol.rates(coords.tmp, part.gp.tmp, trees[[ii]],
-                                       Subset = TRUE, iter=iter)
-        res.multirate[[ii]][i,j] <-tmp$sigma.d.ratio # puts rate ratio in lower tri
-        res.multirate[[ii]][j,i] <-tmp$P.value # puts the Pvalue in the upper tri
-      }}}} # for each partition (as i and j), when the two partitions are not the same (if(i!=j))
-remove(tmp, coords.tmp, part.gp.tmp, ii, i, j)
-res.multirate
 ```
 
 #
-
-```{r}
-####~~~~~~~~~~~~PHYLOGENETIC ANALYSES~~~~~~~~~~~~~~~~~####
-
-# how much of the shape variation can be explained by phylogeny? 
-# We can address this simply as first using a linear model of shape and a taxonomic grouping variable, here the clades
-
-procD.lm(coords ~ sp.SpecData.Cladename, data=gdf) # brain shape vs clade
-procD.lm(log(Csize) ~ sp.SpecData.Cladename, data=gdf) # brain size vs clade
-
-
-physignal(coords, trees$Tree1)
-physignal(log(Csize), trees$Tree1)
-
-
-```
