@@ -20,7 +20,7 @@ library(ape)
 library(plyr)
 library(abind)
 library(geiger)
-
+library(caper)
 
 ```
 #read in coordinates
@@ -62,6 +62,22 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
  
 ```
 
+
+#Importation of partition map, ensure it's a factor
+
+
+The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
+
+```{r}
+
+### Import the  partition map, ensure it's a factor
+part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
+part.gp=as.factor(part.gp$V1)
+
+
+```
+
+
 #Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
 #This will make it possible to allow me to analyse their shape variation relative to each other
 
@@ -78,7 +94,6 @@ GPA_AllSpecimens <- gpagen(Data)
 
 #Remember= dim() is the dimensions of an object
 
-#There are multiple specimens of the same species. This means they need to be averaged before continuing 
 
 # shape data
 ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
@@ -95,24 +110,23 @@ dimnames(GPA_AllSpecimens$coords)[[3]]==names(GPA_AllSpecimens$Csize)
 dimnames(ind.coords)[[3]]==names(ind.Csize)
 
 #Turning into gdf frame and giving names
-GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
-dimnames(GPA_mean$coords)[[3]] <-dimnames(ind.coords)[[3]]
-names(GPA_mean$Csize) <- names(ind.Csize)
+GPA_Allmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+dimnames(GPA_Allmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_Allmean$Csize) <- names(ind.Csize)
 
 
 ```
-#run GPA for basicranial lms
+
+
+#GPA for basicranial landmarks
 ```{r}
-#Subset basicranial lms
+#Subset basicranial landmarks
 Data_basi=Data[which(part.gp==2),,]
 #double-check that the correct number of landmarks has been subtracted
 attributes(Data_basi)
 
-KEEP GOING BELOW TO DO GPA AND AVERAGE MULTIPLE SPECIMENS THEN DO SEPARATE ALLOMETRY PHYSIGNAL, DIET AND LOCOMOTION PGLS ANALYSES.
-
-
-
-GPA_AllSpecimens <- gpagen(Data)
+#GPA
+GPA_basi <- gpagen(Data_basi)
 
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
@@ -121,27 +135,72 @@ GPA_AllSpecimens <- gpagen(Data)
 
 #Remember= dim() is the dimensions of an object
 
-#There are multiple specimens of the same species. This means they need to be averaged before continuing 
 
 # shape data
-ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
-rownames(ind.coords) <- unique(dimnames(GPA_AllSpecimens$coords)[[3]])
+basi.coords <- aggregate(two.d.array(GPA_basi$coords) ~ dimnames(GPA_basi$coords)[[3]], FUN=mean)[,-1]
+rownames(basi.coords) <- unique(dimnames(GPA_basi$coords)[[3]])
+basi.coords <- arrayspecs(basi.coords, p=ncol(basi.coords)/3, k=3)
+# centroid size data
+basi.Csize <- as.vector(aggregate(GPA_basi$Csize ~ dimnames(GPA_basi$coords)[[3]], FUN=mean)[,-1])
+names(basi.Csize) <- unique(names(GPA_basi$Csize))
+# basi.Csize - These are the individuals Csize data for plotting specimen allometry graphs
+
+#are dimnames identical i.e. will the aligned properly?
+dimnames(GPA_basi$coords)[[3]]==names(GPA_basi$Csize)
+
+dimnames(basi.coords)[[3]]==names(basi.Csize)
+
+#Turning into gdf frame and giving names
+GPA_Basimean <-geomorph.data.frame(coords=basi.coords, Csize=basi.Csize)
+dimnames(GPA_Basimean$coords)[[3]] <-dimnames(basi.coords)[[3]]
+names(GPA_Basimean$Csize) <- names(basi.Csize)
+
+```
+
+
+#GPA for the REST OF THE SKULL
+
+
+```{r}
+
+#Subset the rest of the skull's landmarks lms
+Data_reskull=Data[which(part.gp==1),,]
+#double-check that the correct number of landmarks has been subtracted
+attributes(Data_reskull)
+
+#GPA
+
+GPA_reskull <- gpagen(Data_reskull)
+
+
+#AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
+
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
+
+#Remember= dim() is the dimensions of an object
+
+# shape data
+ind.coords <- aggregate(two.d.array(GPA_reskull$coords) ~ dimnames(GPA_reskull$coords)[[3]], FUN=mean)[,-1]
+rownames(ind.coords) <- unique(dimnames(GPA_reskull$coords)[[3]])
 ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
 # centroid size data
-ind.Csize <- as.vector(aggregate(GPA_AllSpecimens$Csize ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1])
-names(ind.Csize) <- unique(names(GPA_AllSpecimens$Csize))
+ind.Csize <- as.vector(aggregate(GPA_reskull$Csize ~ dimnames(GPA_reskull$coords)[[3]], FUN=mean)[,-1])
+names(ind.Csize) <- unique(names(GPA_reskull$Csize))
 # ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
 
 #are dimnames identical i.e. will the aligned properly?
-dimnames(GPA_AllSpecimens$coords)[[3]]==names(GPA_AllSpecimens$Csize)
+dimnames(GPA_reskull$coords)[[3]]==names(GPA_reskull$Csize)
 
 dimnames(ind.coords)[[3]]==names(ind.Csize)
 
 #Turning into gdf frame and giving names
-GPA_mean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
-dimnames(GPA_mean$coords)[[3]] <-dimnames(ind.coords)[[3]]
-names(GPA_mean$Csize) <- names(ind.Csize)
+GPA_Restmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+dimnames(GPA_Restmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_Restmean$Csize) <- names(ind.Csize)
 
+
+
+```
 
 
 
@@ -166,20 +225,20 @@ rownames(speclist) <-speclist$Specimen
 
 ```{r}
 #Checking if all specimens are read in properly with their Csizes
-PCA_all <- plotTangentSpace(GPA_AllSpecimens$coords, label=dimnames(GPA_AllSpecimens$coords)[[3]])
+PCA_all <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
 
-plot(PCA_all$pc.scores[,1]~GPA_AllSpecimens$Csize ); text(PCA_all$pc.scores[,1]~GPA_AllSpecimens$Csize, labels=names(GPA_AllSpecimens$Csize))
+plot(PCA_all$pc.scores[,1]~GPA_Allmean$Csize ); text(PCA_all$pc.scores[,1]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
 
 
 #Run PCA
-PCA_mean <- plotTangentSpace(GPA_mean$coords, label=dimnames(GPA_mean$coords)[[3]])
+PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
 
-plot(PCA_mean$pc.scores[,1]~GPA_mean$Csize ); text(PCA_mean$pc.scores[,1]~GPA_mean$Csize, labels=names(GPA_mean$Csize))
+plot(PCA_mean$pc.scores[,1]~GPA_Allmean$Csize ); text(PCA_mean$pc.scores[,1]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
-dimnames(GPA_mean$coords)[[3]]
+dimnames(GPA_Allmean$coords)[[3]]
 
-plotRefToTarget(GPA_mean$coords[,,1], GPA_mean$coords[,,48], method="vector")
+plotRefToTarget(GPA_Allmean$coords[,,1], GPA_Allmean$coords[,,48], method="vector")
 
 
 ```
@@ -228,45 +287,18 @@ tree_use$tip.label[130] <- "Petaurus_australis"
 #to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
 
 #NAVIGATE TO THE NAMES FOR THESE NAME CHECKS HAVE A LOOK FURTHER UP IN THE CODE
-namecheck=name.check(tree_use,GPA_mean$Csize)
+namecheck=name.check(tree_use,GPA_Allmean$Csize)
 
-Matchtest=match(tree_use$tip.label,GPA_mean$Csize)
+Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
 length(which(!is.na (Matchtest)))
 
 
 tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
 
-name.check(tree_synch,GPA_mean$Csize)
+name.check(tree_synch,GPA_Allmean$Csize)
 
 ```
 
-#Create two partitions
-
-The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
-
-
-#IF YOU RUN INTO A PROBLEM, FIRST CHECK IF ALL THE DATA HAVE READ IN PROPERLY - THERE WERE TWO ISSUES WITH PART.GP, ONE WAS THAT THE FIRST ROW CONTAINED WEIRD CHARACTERS AND THE SECOND WAS THAT IT CONTAINED HEAPS OF COLUMNS WITH JUST NAS. BOTH ARE FIXED NOW
-```{r}
-### Import the  partition map, ensure it's a factor
-part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
-part.gp=as.factor(part.gp$V1)
-#Creating the two partitions 
-  
-basi <- GPA_mean$coords[which(part.gp==2), , ]
-basiCsize <- GPA_mean$Csize
-
-basiland <-geomorph.data.frame(coords=basi, Csize=basiCsize)
-dimnames(basiland$coords)[[3]] <-dimnames(GPA_mean$coords)[[3]]
-names(basiland$Csize) <- names(GPA_mean$Csize)
-
-#Must return all TRUE
-names(basiland$Csize)==dimnames(basiland$coords)[[3]]
-
-reskull <-GPA_mean$coords[which(part.gp==1), , ]
-
-
-
-```
 Temporary rough code to make partitions show up 
 
 
@@ -278,7 +310,7 @@ Temporary rough code to make partitions show up
   #colour scheme ;-)
   Colours <- c("hotpink", "purple")
  #Make mean shape that the points can be plotted on
-  Ref=mshape(GPA_mean$coords)
+  Ref=mshape(GPA_Allmean$coords)
   
   Part=list()
   ##subset the landmarks according to the partitions
@@ -307,18 +339,18 @@ looking at overall shape however
 #Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
 
 
-#CHECK IF ALLOMETRY IS ONLY IN THE "REST OF SKULL" PARTITION
-
 ```{r}
 #Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
-Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_mean, iter=10000, print.progress=FALSE)
+Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_Allmean, iter=10000, print.progress=FALSE)
 summary(Allom)
 
-summary(procD.lm(coords~Csize,  data=GPA_mean, logsz=TRUE,iter=10000, print.progress=TRUE))
 
-
-AllBasi<-procD.lm(coords~Csize, data=basiland, iter=1000, print.progress=FALSE)
+AllBasi<-procD.lm(coords~Csize, data=GPA_Basimean, iter=1000, print.progress=FALSE)
 summary(AllBasi)
+
+
+AllRest<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_Restmean, iter=10000, print.progress=FALSE)
+summary(AllRest)
 
 ```
 
@@ -326,7 +358,11 @@ summary(AllBasi)
 
 #Compare evolutionary rates of partitions and phylogenetic signal
 
-There are four partitions but you only set up 3 of these res.evolrate codes (see your code). Do I use 1 if I have 2 partitions?
+Evolutionary rates
+
+#Phylogenetic signalling
+
+
 ```{r}
 #### SHAPE RATE ANALYSES
 ### Compare evolutionary rates between partitions
@@ -334,14 +370,30 @@ There are four partitions but you only set up 3 of these res.evolrate codes (see
 
 
 parevo.rate <- 
-  compare.multi.evol.rates(GPA_mean$coords,  part.gp, tree_synch,iter = 1000)
+  compare.multi.evol.rates(GPA_Allmean$coords,  part.gp, tree_synch,iter = 1000)
 
 # Does phylogenetic signal differ? do for the other two as well and csize
 
-physignal(GPA_mean$coords, tree_synch, iter = 1000)
+physignal(GPA_Allmean$coords, tree_synch, iter = 1000)
 
+physignal(GPA_Basimean$coords, tree_synch, iter = 1000)
 
+physignal(GPA_Restmean$coords, tree_synch, iter = 1000)
 
 ```
 
-#
+#PGLS for Diet and Locomotion (look at all three GPAs)
+
+
+```{r}
+
+#First look at diet
+
+
+Diet_all<-procD.pgls(coords~Csize + Allandlist$diet, tree_synch, data = GPA_Allmean, iter = 999)
+
+
+
+
+````
+
