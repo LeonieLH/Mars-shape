@@ -226,6 +226,7 @@ rownames(speclist) <-speclist$Specimen
 ```{r}
 #Checking if all specimens are read in properly with their Csizes
 PCA_all <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
+summary(PCA_all$pc.scores)
 
 plot(PCA_all$pc.scores[,1]~GPA_Allmean$Csize ); text(PCA_all$pc.scores[,1]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
 
@@ -334,10 +335,9 @@ Allometry in geometric morphometrics refers to size-related changes of morpholog
 e.g. does brain size increase as body size increases?
 looking at overall shape however
 
-#TO UNDERSTAND/TEST...., TESTING FOR ALLOMETRY (WHAT ABOUT ALLOMETRY ARE YOU TESTING?)
+#Csize has an effect on shape of the landmarks
 
-#Figure out allometry - try to do this yourself, check the geomorph guide here. Is there significant allometry? Can you plot it? Is there significant correlation betwen PC1, 2 or 3 and Allometry? As a proxy for size, use GPA$Csize.Try this, I can help you later tonight if you get stuck.
-
+##When analysing the allometry of the remaining landmark on the skull the results showed the effect size of Csize is quite small however there is a fairly significant p-value suggesting that Csize does have an effect on shape
 
 ```{r}
 #Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
@@ -358,6 +358,8 @@ summary(AllRest)
 
 #Compare evolutionary rates of partitions and phylogenetic signal
 
+
+
 Evolutionary rates
 
 #Phylogenetic signalling
@@ -371,6 +373,7 @@ Evolutionary rates
 
 parevo.rate <- 
   compare.multi.evol.rates(GPA_Allmean$coords,  part.gp, tree_synch,iter = 1000)
+summary(parevo.rate)
 
 # Does phylogenetic signal differ? do for the other two as well and csize
 
@@ -386,12 +389,61 @@ physignal(GPA_Restmean$coords, tree_synch, iter = 1000)
 
 
 ```{r}
+#Combine the GPA geomorph dataframe with the two columns I want from the speclist data frame
 
-#First look at diet
+#Do this for each of the GPA dataframes
 
 
-Diet_all<-procD.pgls(coords~Csize + Allandlist$diet, tree_synch, data = GPA_Allmean, iter = 999)
+Allandlist<-mutate(GPA_Allmean, diet=speclist$Diet, locomotion=speclist$Locomotion)
 
+Basiandlist<-mutate(GPA_Basimean, diet=speclist$Diet, locomotion=speclist$Locomotion)
+
+Restandlist<-mutate(GPA_Restmean, diet=speclist$Diet, locomotion=speclist$Locomotion)
+
+#First look at diet and locomotion for all landmarks
+
+
+Alldiet_inter<-procD.pgls(coords~Csize:diet, tree_synch, data = Allandlist, iter = 999)
+summary(Alldiet_inter)
+
+AllDiet_add<-procD.pgls(coords~Csize+diet, tree_synch, data = Allandlist, iter = 999)
+summary(AllDiet_add)
+
+AllLoco_inter<-procD.pgls(coords~Csize:locomotion, tree_synch, data = Allandlist, iter=999)
+summary(AllLoco_inter)
+
+AllLoco_add<-procD.pgls(coords~Csize+locomotion, tree_synch, data = Allandlist, iter=999)
+summary(AllLoco_add)
+
+
+# Next look at basicranium landmarks
+
+Basidiet_inter<-procD.pgls(coords~Csize:diet, tree_synch, data = Basiandlist, iter = 999)
+summary(Basidiet_inter)
+
+BasiDiet_add<-procD.pgls(coords~Csize+diet, tree_synch, data = Basiandlist, iter = 999)
+summary(BasiDiet_add)
+
+BasiLoco_inter<-procD.pgls(coords~Csize:locomotion, tree_synch, data = Basiandlist, iter=999)
+summary(BasiLoco_inter)
+
+BasiLoco_add<-procD.pgls(coords~Csize+locomotion, tree_synch, data = Basiandlist, iter=999)
+summary(BasiLoco_add)
+
+
+#Then at the rest of the skull landmarks
+
+RestDiet_inter<-procD.pgls(coords~Csize:diet, tree_synch, data = Restandlist, iter = 999)
+summary(RestDiet_inter)
+
+RestDiet_add<-procD.pgls(coords~Csize+diet, tree_synch, data = Restandlist, iter = 999)
+summary(RestDiet_add)
+
+RestLoco_inter<-procD.pgls(coords~Csize:locomotion, tree_synch, data = Restandlist, iter=999)
+summary(RestLoco_inter)
+
+RestLoco_add<-procD.pgls(coords~Csize+locomotion, tree_synch, data = Restandlist, iter=999)
+summary(RestLoco_add)
 
 
 
