@@ -6,7 +6,7 @@ Caluromys_derbianus	Arboreal	Omnivore	Didelphid
 Chironectes_minimus	Terrestrial	Carnivore	Didelphid
 Dactylopsila_trivirgata	Arboreal	Insectivore	Phalangeroid
 Dasyurus_viverrinus 	Scansorial	Carnivore	Dasyuromorph
-Dendrolagus_inustus	Pentapedal	Herbivore	Macropod
+Dendrolagus_inustus	Saltatorial	Herbivore	Macropod
 Didelphis_marsupialis	Terrestrial	Omnivore	Didelphid
 Didelphis_virginiana	Scansorial	Omnivore	Didelphid
 Distoechurus_pennatus	Arboreal	Insectivore	Petauroid
@@ -18,7 +18,7 @@ Hypsiprymnodon_moschatus	Terrestrial	Insectivore	Macropod
 Isoodon_obesulus	Terrestrial	Omnivore	Peramelemorph
 Lestoros_inca	Terrestrial	Insectivore	Caenolestid
 Lutreolina_crassicaudata	Terrestrial	Omnivore	Didelphid
-Macropus_rufus	Pentapedal	Herbivore	Macropod
+Macropus_rufus	Saltatorial	Herbivore	Macropod
 Macrotis_lagotis	Terrestrial	Omnivore	Peramelemorph
 Marmosa_alstoni	Arboreal	Omnivore	Didelphid
 Marmosa_demerarae	Arboreal	Insectivore	Didelphid
@@ -31,7 +31,7 @@ Monodelphis_brevicaudata	Terrestrial	Insectivore	Didelphid
 Monodelphis_domestica	Terrestrial	Omnivore	Didelphid
 Perameles_nasuta	Terrestrial	Omnivore	Peramelemorph
 Petauroides_volans	Arboreal	Herbivore	Petauroid
-Petaurus_australis	Arboreal	Nectarivore	Petauroid
+Petaurus_australis	Arboreal	Herbivore	Petauroid
 Petaurus_breviceps	Arboreal	Omnivore	Petauroid
 Petrogale_xanthopus	Saltatorial	Herbivore	Macropod
 Phalanger_mimicus	Arboreal	Omnivore	Phalangeroid
@@ -44,6 +44,6 @@ Rhyncholestes_raphanurus	Terrestrial	Insectivore	Caenolestid
 Sminthopsis_murina	Terrestrial	Insectivore	Dasyuromorph
 Thylamys_elegans	Arboreal	Insectivore	Didelphid
 Thylamys_pallidior	Arboreal	Insectivore	Didelphid
-Thylogale_stigmatica 	Pentapedal	Herbivore	Macropod
+Thylogale_stigmatica 	Saltatorial	Herbivore	Macropod
 Trichosurus_vulpecula 	Arboreal	Herbivore	Phalangeroid
 Vombatus_ursinus	Terrestrial	Herbivore	Vombatiform

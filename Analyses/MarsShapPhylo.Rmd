@@ -56,12 +56,21 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   remove(i, filelist, names, k, coords, temp) # clean up environment
   
   #Double check that the 3D info is entered properly
-  plot3d(Data[,,5], asp=FALSE)
-  text3d(Data[,,5], texts=c(1:71))
+  plot3d(Data[,,4], asp=FALSE)
+  text3d(Data[,,4], texts=c(1:58))
   
  
 ```
 
+#Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade
+
+
+```{r}
+
+speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
+rownames(speclist) <-speclist$Specimen
+
+```
 
 #Importation of partition map, ensure it's a factor
 
@@ -158,6 +167,7 @@ names(GPA_Basimean$Csize) <- names(basi.Csize)
 ```
 
 
+
 #GPA for the REST OF THE SKULL
 
 
@@ -203,21 +213,38 @@ names(GPA_Restmean$Csize) <- names(ind.Csize)
 ```
 
 
-
-
-
-
-#Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade - 
+Temporary rough code to make partitions show up 
 
 
 ```{r}
+#colouring partition spheres 
 
-speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
-rownames(speclist) <-speclist$Specimen
+ #provides the numbers of the parts
+  PartLevels = unique(part.gp[])
+  #colour scheme ;-)
+  Colours <- c("hotpink", "purple")
+ #Make mean shape that the points can be plotted on
+  Ref=mshape(GPA_Allmean$coords)
+  
+  Part=list()
+  ##subset the landmarks according to the partitions
+  for(i in 1:length(PartLevels)){
+    Part[[i]]<-which (part.gp[] == PartLevels[[i]])
+  }
+  
+  ##colours the spheres for each partition on the mean shape
+  
+  open3d()
+  
+  for (i in 1:length(PartLevels)){
+    spheres3d( Ref[Part[[i]],], col=Colours[i], lit=TRUE, radius = 0.003, asp=F)
+    
+  }
 
+  
 ```
 
-#To understand the main variation in shape between marsupial species I will run a Principle Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+#To understand the main variation in shape between marsupial species I will run a Principal Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
 
 #Each PC represents a particular aspect of the overall shape variation, see more in the chunk
 
@@ -300,36 +327,6 @@ name.check(tree_synch,GPA_Allmean$Csize)
 
 ```
 
-Temporary rough code to make partitions show up 
-
-
-```{r}
-#colouring partition spheres CHANGE THESE TO WHAT IT IS HERE SO YOU KNOW WHAT IS GOING ON
-
- #provides the numbers of the parts
-  PartLevels = unique(part.gp[])
-  #colour scheme ;-)
-  Colours <- c("hotpink", "purple")
- #Make mean shape that the points can be plotted on
-  Ref=mshape(GPA_Allmean$coords)
-  
-  Part=list()
-  ##subset the landmarks according to the partitions
-  for(i in 1:length(PartLevels)){
-    Part[[i]]<-which (part.gp[] == PartLevels[[i]])
-  }
-  
-  ##colours the spheres for each partition on the mean shape
-  
-  open3d()
-  
-  for (i in 1:length(PartLevels)){
-    spheres3d( Ref[Part[[i]],], col=Colours[i], lit=TRUE, radius = 0.003, asp=F)
-    
-  }
-
-  
-```
 
 Allometry in geometric morphometrics refers to size-related changes of morphological traits. 
 e.g. does brain size increase as body size increases?
@@ -348,6 +345,7 @@ summary(Allom)
 AllBasi<-procD.lm(coords~Csize, data=GPA_Basimean, iter=1000, print.progress=FALSE)
 summary(AllBasi)
 
+plotAllometry(AllBasi, size=GPA_Basimean$Csize, method = "RegScore")
 
 AllRest<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_Restmean, iter=10000, print.progress=FALSE)
 summary(AllRest)
@@ -400,50 +398,46 @@ Basiandlist<-mutate(GPA_Basimean, diet=speclist$Diet, locomotion=speclist$Locomo
 
 Restandlist<-mutate(GPA_Restmean, diet=speclist$Diet, locomotion=speclist$Locomotion)
 
+
 #First look at diet and locomotion for all landmarks
 
 
-Alldiet_inter<-procD.pgls(coords~Csize:diet, tree_synch, data = Allandlist, iter = 999)
+Alldiet_inter<-procD.pgls(coords ~ diet, tree_synch, data = Allandlist, iter = 999)
 summary(Alldiet_inter)
 
-AllDiet_add<-procD.pgls(coords~Csize+diet, tree_synch, data = Allandlist, iter = 999)
-summary(AllDiet_add)
-
-AllLoco_inter<-procD.pgls(coords~Csize:locomotion, tree_synch, data = Allandlist, iter=999)
-summary(AllLoco_inter)
-
-AllLoco_add<-procD.pgls(coords~Csize+locomotion, tree_synch, data = Allandlist, iter=999)
+AllLoco_add<-procD.pgls(coords ~ locomotion, tree_synch, data = Allandlist, iter=999)
 summary(AllLoco_add)
 
 
 # Next look at basicranium landmarks
 
-Basidiet_inter<-procD.pgls(coords~Csize:diet, tree_synch, data = Basiandlist, iter = 999)
+Basidiet_inter<-procD.pgls(coords~diet, tree_synch, data = Basiandlist, iter = 999)
 summary(Basidiet_inter)
 
-BasiDiet_add<-procD.pgls(coords~Csize+diet, tree_synch, data = Basiandlist, iter = 999)
-summary(BasiDiet_add)
-
-BasiLoco_inter<-procD.pgls(coords~Csize:locomotion, tree_synch, data = Basiandlist, iter=999)
+BasiLoco_inter<-procD.pgls(coords~locomotion, tree_synch, data = Basiandlist, iter=999)
 summary(BasiLoco_inter)
 
-BasiLoco_add<-procD.pgls(coords~Csize+locomotion, tree_synch, data = Basiandlist, iter=999)
-summary(BasiLoco_add)
+plot3d(Basiandlist$coords[,,8], asp=TRUE); text3d(Basiandlist$coords[,,8], texts=c(35:58))
 
-
+                                            
+                                                   
 #Then at the rest of the skull landmarks
 
-RestDiet_inter<-procD.pgls(coords~Csize:diet, tree_synch, data = Restandlist, iter = 999)
+RestDiet_inter<-procD.pgls(coords~diet, tree_synch, data = Restandlist, iter = 999)
 summary(RestDiet_inter)
 
-RestDiet_add<-procD.pgls(coords~Csize+diet, tree_synch, data = Restandlist, iter = 999)
-summary(RestDiet_add)
-
-RestLoco_inter<-procD.pgls(coords~Csize:locomotion, tree_synch, data = Restandlist, iter=999)
-summary(RestLoco_inter)
-
-RestLoco_add<-procD.pgls(coords~Csize+locomotion, tree_synch, data = Restandlist, iter=999)
+RestLoco_add<-procD.pgls(coords~locomotion, tree_synch, data = Restandlist, iter=999)
 summary(RestLoco_add)
+
+#Does the locomotion signal also show in the main variation as per PC1
+
+PCA <- plotTangentSpace(Allandlist$coords)
+
+plot(PCA$pc.scores[,1]~ as.numeric (Allandlist$locomotion))
+
+
+plot(PCA$pc.scores[,1]~ as.numeric (Basiandlist$locomotion))
+plot(PCA$pc.scores[,1]~ as.numeric (Restandlist$locomotion))
 
 
 
