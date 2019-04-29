@@ -293,6 +293,26 @@ plotRefToTarget(GPA_Allmean$coords[,,1], GPA_Allmean$coords[,,48], method="vecto
 
 ```
 
+Allometry with phylogeny 
+
+```{r}
+#Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
+Phyall<-procD.pgls(coords~Csize, tree_synch, data=GPA_Allmean, iter=999)
+summary(Phyall)
+
+
+Phyallbasi<-procD.pgls(coords~Csize, tree_synch, data=GPA_Basimean, iter=999)
+summary(Phyallbasi)
+
+plotAllometry(Phyallbasi, size=GPA_Basimean$Csize, method = "RegScore")
+
+Phyallrest<-procD.pgls(coords~Csize, tree_synch, data=GPA_Restmean, iter=999)
+summary(Phyallrest)
+
+
+```
+
+
 #PlotRefto target - Function plots shape differences between a reference and target specimen
 #vector: a plot showing the vector displacements between corresponding landmarks in the reference and target specimen is shown
 
