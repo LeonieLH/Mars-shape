@@ -62,7 +62,7 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
  
 ```
 
-#Read in classifier file that contains the species name, locomotion type, diet, and phylogenetic clade
+#Read in classifier file that contains the species name, locomotion type, diet, and clade
 
 
 ```{r}
@@ -82,6 +82,20 @@ The landmark dataset will now be split into two partitions; basicranium and the 
 ### Import the  partition map, ensure it's a factor
 part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
 part.gp=as.factor(part.gp$V1)
+
+
+```
+
+#Make an image of the partitions (in progress)
+
+
+```{r}
+Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
+
+
+plot3d(Data[,,7], asp=FALSE)
+shade3d(Dviv )
+
 
 
 ```
@@ -213,7 +227,7 @@ names(GPA_Restmean$Csize) <- names(ind.Csize)
 ```
 
 
-Temporary rough code to make partitions show up 
+#Images for partitions
 
 
 ```{r}
@@ -223,8 +237,15 @@ Temporary rough code to make partitions show up
   PartLevels = unique(part.gp[])
   #colour scheme ;-)
   Colours <- c("hotpink", "purple")
- #Make mean shape that the points can be plotted on
+  
+  #Mesh material
+  
+ 
+  #Make mean shape that the points can be plotted on
   Ref=mshape(GPA_Allmean$coords)
+  
+  #Or, for 3d plotting, call up the coordinates of the mean specimen; remember that the radius of the spheres might need to increase because this is not GPA'ed
+  Ref <- Data[,,7]
   
   Part=list()
   ##subset the landmarks according to the partitions
@@ -237,10 +258,11 @@ Temporary rough code to make partitions show up
   open3d()
   
   for (i in 1:length(PartLevels)){
-    spheres3d( Ref[Part[[i]],], col=Colours[i], lit=TRUE, radius = 0.003, asp=F)
+    spheres3d( Ref[(Part[[i]]),]*1000, col=Colours[i], lit=TRUE, radius = 900, asp=F)
     
   }
 
+  shade3d (Dviv, color="grey")
   
 ```
 
