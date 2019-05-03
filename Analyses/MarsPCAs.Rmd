@@ -1,0 +1,151 @@
+---
+title: "MarsPCAGraphs"
+output: html_document
+---
+
+```{r}
+library(png)
+
+setwd("D:/Github_Projects/Mars-shape/Data/")
+
+
+
+```
+
+
+
+```{r }
+cols <- c("blue", "dark green", "#00CCCC", "#CC0000", "#0099FF", "light green",
+"#9966FF", "#FF6600", "#FF6600", "#00CC00", "#FFCC00", "dark blue")
+# specific colours for clades, use hex values or real names
+names(cols) <- levels(speclist$Clade) # assign levels to colours
+col.gp <- cols[match(speclist$Clade, names(cols))] # magic!
+head(col.gp) # see the result
+```
+
+## Here we make a short form vector of species names of type “G.sp” for plotting:
+```{r }
+
+head(speclist$Specimen) # viewing the species names
+
+Gen.sp <- matrix(unlist(strsplit(as.character(speclist$Specimen), "_")),
+ncol=2, byrow = T)
+# string split is used to separate a character string
+head(Gen.sp)# should show a genus and species names split
+
+Gen.sp <- paste(substr(Gen.sp[,1], 1, 1), substr(Gen.sp[,2], 1, 3), sep=".") 
+head(Gen.sp) # see the result
+
+```
+
+##Preparing to make Shape Change Graphs (in 3D)
+
+#Here we are going to warp a mesh to the shapes defined by the minima and maxima of the PCA
+```{r}
+ref <- mshape(GPA_Allmean$coords) # First get the mean shape
+# Load in the PLY file and prepare for plotting
+Dviv <- read.ply("Dviv.ply")
+Dviv$material <- "#31a354" ; open3d(); shade3d(Dviv) # change colour and view the mesh
+mesh.coords <- read.morphologika("D:/Github_Projects/Mars-shape/Data/Raw/Coordinates/Dasyurus_viverrinus_J7996.txt")
+
+# read in the landmarks digitized on this ply file in Checkpoint
+plotspec(Dviv,mesh.coords[,,1]/1000, centered = F)
+# check that the landmarks match the mesh; dividing by 1000 takes
+# into account the scaling discrepancy of Checkpoint output files
+
+refmesh <- warpRefMesh(Dviv, mesh.coords[,,1]/1000, ref, centered=FALSE)
+# creates a mean shaped mesh
+
+```
+
+
+## preparing axis labels
+
+```{r}
+
+pc1lab <-paste("PC 1 ","(",
+round(100*PCA_mean$pc.summary$importance[2,1],1),"%)",sep="")
+pc2lab <-paste("PC 2 ","(",
+round(100*PCA_mean$pc.summary$importance[2,2],1),"%)",sep="")
+pc3lab <-paste("PC 3 ","(",
+round(100*PCA_mean$pc.summary$importance[2,3],1),"%)",sep="")
+
+pc1lab  #Shows you what it should look like
+
+```
+
+
+
+##Now to make a fancy PC plot - THIS IS DONE AS ONE BIG CHUNK
+
+#plotting PCs 1-2, coloured by clade and particular clades as shaded convex hulls
+
+```{r pressure, echo=FALSE}
+
+png("..Data/Figure 3.png",width = 500, height = 900, units = "px", pointsize = 12)
+# setting up to save the picture to file with those dimensions
+
+mat <- matrix(c(1,1,2,2,3:8), nrow=5,byrow=T)
+layout(mat, widths=c(1,1,0.5,0.5,0.5), heights=c(0.4,0.55,0.3,0.3,0.3))
+# set the size of the rows and columns
+
+#Plot 1 - PC1 vs PC3
+par(mar=c(0, 4, 1, 1)) # sets the margins
+plot(PCA_mean$pc.scores[,1], PCA_mean$pc.scores[,3], asp=T,xlab= "",
+ylab= pc3lab, pch = 21, cex = 1.5, bg = col.gp, cex.axis=1.3, cex.lab=1.3,
+bty="n", xaxt="n")
+axis(side = 1, at=c(-0.2,0.1), labels = FALSE, col.ticks = "white")
+
+# Add coloured polygons for the following clades:
+clades <- levels(speclist$Clade)[c(1,2,4,7,11)]
+for(i in clades){
+  tmp <- which(speclist$Clade == i)
+  EP <- rownames(PCA_mean$pc.scores[tmp,])[chull(PCA_mean$pc.scores[tmp, c(1,3)])] # find outer edge points
+polygon(PCA_mean$pc.scores[EP,c(1,3)], col=adjustcolor(cols[which(names(cols) == i)],
+  alpha.f = 0.3), border=cols[which(names(cols) == i)]) # Plot convex hull as polygon
+}
+
+# Then add the "Possums"
+poss <- c(which(speclist$Clade == "Petauroid"),
+which(speclist$Clade == "Phalangerid"))
+EP <- rownames(PCA_mean$pc.scores[poss,])[chull(PCA_mean$pc.scores[poss, c(1,3)])] # find outer edge points
+polygon(PCA_mean$pc.scores[EP,c(1,3)], col=adjustcolor(cols[which(names(cols) ==
+"Phalangerid")], alpha.f = 0.3), border=cols[which(names(cols) == "Phalangerid")])
+
+#Plot 2 - PC1 vs PC2
+par(mar=c(4, 4, 0, 1)) # sets the margins
+plot(PCA$pc.scores[,1], PCA$pc.scores[,2], asp=T, xlab= pc1lab, cex.axis=1.3, cex.lab=1.3,
+ylab= pc2lab, pch = fos.gp, cex = 1.5, bg = col.gp, bty="n") # plots PCA
+
+# Add coloured polygons for the following clades:
+clades <- levels(classifiers$Cladename)[c(1,2,4,7,11)]
+for(i in clades){
+tmp <- which(classifiers$Cladename == i & classifiers$Fossil == "no")
+EP <- rownames(PCA$pc.scores[tmp,])[chull(PCA$pc.scores[tmp, c(1,2)])] # find outer edge points
+polygon(PCA$pc.scores[EP,c(1,2)], col=adjustcolor(cols[which(names(cols) == i)],
+alpha.f = 0.3), border=cols[which(names(cols) == i)]) # Plot convex hull as polygon
+}
+
+#the "Possums"
+EP <- rownames(PCA_mean$pc.scores[poss,])[chull(PCA_mean$pc.scores[poss, c(1,2)])] # find outer edge points
+polygon(PCA$pc.scores[EP,c(1,2)], col=adjustcolor(cols[which(names(cols) ==
+"Phalangerid")], alpha.f = 0.3), border=cols[which(names(cols) == "Phalangerid")])
+
+remove(EP, tmp) # clean up environment
+
+# Plot the 3D model screenshots below
+par(mar=c(0, 0, 0, 0)) # sets the margins
+for(i in 1:3){
+tmp <- readPNG(paste("Figures/Mesh_PC",i,"min_lateral.png",sep=""))
+plot(c(0,dim(tmp)[2]),c(0,dim(tmp)[1]),type="n", axes=F, xlab = "", ylab = "",asp=T)
+rasterImage(tmp,0,0,dim(tmp)[2],dim(tmp)[1])
+text(60,10, labels=paste("PC",i," min.", sep=""),cex=1.3)
+tmp <- readPNG(paste("Figures/Mesh_PC",i,"max_lateral.png",sep=""))
+plot(c(0,dim(tmp)[2]),c(0,dim(tmp)[1]),type="n", axes=F, xlab = "", ylab = "",asp=T)
+rasterImage(tmp,0,0,dim(tmp)[2],dim(tmp)[1])
+text(60,10, labels=paste("PC",i," max.",sep=""),cex=1.3)
+}
+dev.off() # end writing png file
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
