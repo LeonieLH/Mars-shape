@@ -285,6 +285,8 @@ PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coor
 
 plot(PCA_mean$pc.scores[,1]~GPA_Allmean$Csize ); text(PCA_mean$pc.scores[,1]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
 
+plot(PCA_mean$pc.scores[,2]~GPA_Allmean$Csize ); text(PCA_mean$pc.scores[,2]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
+
 PCA_mean$pc.summary$importance
 
 #If there is an obvious problem specimen, find out what number specimen it is on the GPA
