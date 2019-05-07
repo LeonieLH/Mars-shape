@@ -21,6 +21,8 @@ library(plyr)
 library(abind)
 library(geiger)
 library(caper)
+library(devtools)
+library(ggbiplot)
 
 ```
 #read in coordinates

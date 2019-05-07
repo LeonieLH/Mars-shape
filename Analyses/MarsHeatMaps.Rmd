@@ -16,12 +16,15 @@ To make the landmark variation heatmaps, we use Dr Thomas Guillerme's new packag
 ```{r message = FALSE}
 library(png)  # needed to work with screenshots
 library(geomorph)
+library(devtools)
+library(dispRity)
+library(landvR)
 # Load libraries (and install if necessary) for landvR package
 if(!require(devtools)) install.packages("devtools")
-library(devtools)
 if(!require(dispRity)) install.packages("dispRity")
 if(!require(landvR)) install_github("TGuillerme/landvR")
-setwd("D:/Github_Projects/Mars-shape/Data/')
+
+setwd("D:/Github_Projects/Mars-shape/Data/")
 ```
 
 ### Set up
