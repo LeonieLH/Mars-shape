@@ -22,7 +22,10 @@ library(abind)
 library(geiger)
 library(caper)
 library(devtools)
-library(ggbiplot)
+library(phytools)
+library(nlme)
+Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
+
 
 ```
 #read in coordinates
@@ -88,20 +91,37 @@ part.gp=as.factor(part.gp$V1)
 
 ```
 
-#Make an image of the partitions (in progress)
+# PHYLOGENY 
 
+#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
 
 ```{r}
-Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
+#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
+#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
 
+tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
+tree_use <- tree[1]$tree_1
 
-plot3d(Data[,,7], asp=FALSE)
-shade3d(Dviv )
+###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label
+tree_use$tip.label[5]  
+#This shows particular tip label (without the number present this code will provide you with all the tip labels)
+
+tree_use$tip.label[5] <- "Caluromys_derbianus"
+tree_use$tip.label[1] <- "Lestoros_inca"
+tree_use$tip.label[178] <- "Dendrolagus_inustus"
+tree_use$tip.label[30] <- "Philander_andersoni"
+tree_use$tip.label[124] <- "Phalanger_mimicus"
+tree_use$tip.label[66] <- "Planigale_ingrami"
+tree_use$tip.label[67] <- "Sminthopsis_murina"
+tree_use$tip.label[39] <- "Thylamys_elegans"
+tree_use$tip.label[20] <- "Marmosa_demerarae"
+tree_use$tip.label[19] <- "Marmosa_alstoni"
+tree_use$tip.label[130] <- "Petaurus_australis"
 
 
 
 ```
-
 
 #Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
 #This will make it possible to allow me to analyse their shape variation relative to each other
@@ -138,6 +158,18 @@ dimnames(ind.coords)[[3]]==names(ind.Csize)
 GPA_Allmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 dimnames(GPA_Allmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
 names(GPA_Allmean$Csize) <- names(ind.Csize)
+
+#cHECK that it works with phylogeny
+namecheck=name.check(tree_use,GPA_Allmean$Csize)
+
+#WRITE DOWN WHY THIS WAS DONE
+Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
+length(which(!is.na (Matchtest)))
+
+
+tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
+
+name.check(tree_synch,GPA_Allmean$Csize)
 
 
 ```
@@ -179,6 +211,7 @@ dimnames(basi.coords)[[3]]==names(basi.Csize)
 GPA_Basimean <-geomorph.data.frame(coords=basi.coords, Csize=basi.Csize)
 dimnames(GPA_Basimean$coords)[[3]] <-dimnames(basi.coords)[[3]]
 names(GPA_Basimean$Csize) <- names(basi.Csize)
+
 
 ```
 
@@ -268,38 +301,8 @@ names(GPA_Restmean$Csize) <- names(ind.Csize)
   
 ```
 
-#To understand the main variation in shape between marsupial species I will run a Principal Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
 
-#Each PC represents a particular aspect of the overall shape variation, see more in the chunk
-
-##would you do a PCA for habitat, diet and clade? 
-
-```{r}
-#Checking if all specimens are read in properly with their Csizes
-PCA_all <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
-summary(PCA_all$pc.scores)
-
-plot(PCA_all$pc.scores[,1]~GPA_Allmean$Csize ); text(PCA_all$pc.scores[,1]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
-
-
-#Run PCA
-PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
-
-plot(PCA_mean$pc.scores[,1]~GPA_Allmean$Csize ); text(PCA_mean$pc.scores[,1]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
-
-plot(PCA_mean$pc.scores[,2]~GPA_Allmean$Csize ); text(PCA_mean$pc.scores[,2]~GPA_Allmean$Csize, labels=names(GPA_Allmean$Csize))
-
-PCA_mean$pc.summary$importance
-
-#If there is an obvious problem specimen, find out what number specimen it is on the GPA
-dimnames(GPA_Allmean$coords)[[3]]
-
-plotRefToTarget(GPA_Allmean$coords[,,1], GPA_Allmean$coords[,,48], method="vector")
-
-
-```
-
-Allometry with phylogeny 
+#Evolutionary allometry
 
 ```{r}
 #Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
@@ -333,47 +336,6 @@ plotRefToTarget(PCA_mean$pc.shapes$PC1min, PCA_mean$pc.shapes$PC1max, method="ve
 plotRefToTarget(PCA_mean$pc.shapes$PC2min, PCA_mean$pc.shapes$PC2max, method="vector") #Back to standard grey
 ```
 
-#TREE PHYLOGENY 
-
-#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
-
-```{r}
-#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
-#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
-
-tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
-tree_use <- tree[1]$tree_1
-
-###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
-tree_use$tip.label
-tree_use$tip.label[5]  
-#This shows particular tip label (without the number present this code will provide you with all the tip labels)
-
-tree_use$tip.label[5] <- "Caluromys_derbianus"
-tree_use$tip.label[1] <- "Lestoros_inca"
-tree_use$tip.label[178] <- "Dendrolagus_inustus"
-tree_use$tip.label[30] <- "Philander_andersoni"
-tree_use$tip.label[124] <- "Phalanger_mimicus"
-tree_use$tip.label[66] <- "Planigale_ingrami"
-tree_use$tip.label[67] <- "Sminthopsis_murina"
-tree_use$tip.label[39] <- "Thylamys_elegans"
-tree_use$tip.label[20] <- "Marmosa_demerarae"
-tree_use$tip.label[19] <- "Marmosa_alstoni"
-tree_use$tip.label[130] <- "Petaurus_australis"
-#to do the namecheck, Csize is easier to navigate to but it is part of the same gdf so that's fine
-
-#NAVIGATE TO THE NAMES FOR THESE NAME CHECKS HAVE A LOOK FURTHER UP IN THE CODE
-namecheck=name.check(tree_use,GPA_Allmean$Csize)
-
-Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
-length(which(!is.na (Matchtest)))
-
-
-tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
-
-name.check(tree_synch,GPA_Allmean$Csize)
-
-```
 
 
 Allometry in geometric morphometrics refers to size-related changes of morphological traits. 
@@ -477,17 +439,70 @@ summary(RestDiet_inter)
 RestLoco_add<-procD.pgls(coords~locomotion, tree_synch, data = Restandlist, iter=999)
 summary(RestLoco_add)
 
-#Does the locomotion signal also show in the main variation as per PC1
 
-PCA <- plotTangentSpace(Allandlist$coords)
-
-plot(PCA$pc.scores[,1]~ as.numeric (Allandlist$locomotion))
+```
 
 
-plot(PCA$pc.scores[,1]~ as.numeric (Basiandlist$locomotion))
-plot(PCA$pc.scores[,1]~ as.numeric (Restandlist$locomotion))
+#To understand the main variation in shape between marsupial species I run a Principal Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+
+#Each PC represents a particular aspect of the overall shape variation, see more in the chunk
+
+```{r}
+
+#DELETE later
+name.check(tree_synch,GPA_Allmean$Csize)
+
+#Run PCA
+PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
+
+plotGMPhyloMorphoSpace(tree_synch, GPA_Allmean$coords )
+
+PCA_mean$pc.summary$importance
+
+#Does size play a role in the main variation (as it often does)?
+
+rownames(PCA_mean$pc.scores)==names(GPA_Allmean$Csize)
+PC_Csize=cbind(PCA_mean$pc.scores[,1:4], log(GPA_Allmean$Csize))
+colnames(PC_Csize) <- c("PC1", "PC2", "PC3","PC4","Csize" )
+
+name.check(tree_synch,PC_Csize )
+PC_Csize <-as.data.frame(PC_Csize)
 
 
+PC1_Csize <- gls(PC1~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
+PC2_Csize <- gls(PC2~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
+PC3_Csize <- gls(PC3~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
+PC4_Csize <- gls(PC4~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
+summary(PC1_Csize)
+summary(PC2_Csize)
+summary(PC3_Csize)
+summary(PC4_Csize)
 
-````
+par(mfrow=c(2,2))
+
+plot(PC1~Csize, data=PC_Csize)
+abline (lm(PC_Csize$PC1~PC_Csize$Csize))
+text(PC_Csize$PC1~PC_Csize$Csize, labels=rownames(PC_Csize))
+
+plot(PC2~Csize, data=PC_Csize)
+abline (lm(PC_Csize$PC2~PC_Csize$Csize))
+text(PC_Csize$PC2~PC_Csize$Csize, labels=rownames(PC_Csize))
+
+plot(PC3~Csize, data=PC_Csize)
+abline (lm(PC_Csize$PC3~PC_Csize$Csize))
+text(PC_Csize$PC3~PC_Csize$Csize, labels=rownames(PC_Csize))
+
+plot(PC4~Csize, data=PC_Csize)
+abline (lm(PC_Csize$PC4~PC_Csize$Csize))
+text(PC_Csize$PC4~PC_Csize$Csize, labels=rownames(PC_Csize))
+
+
+#Checking phylogenetic signal in PC1; add justification of K reference in thesis; think about if we want this in because it is very different to shape physig.
+
+phylosig(tree_synch, PCA_mean$pc.scores[,1],method="K", nsim=1000)
+phylosig(tree_synch, PCA_mean$pc.scores[,2],method="K", nsim=1000)
+phylosig(tree_synch, PCA_mean$pc.scores[,3],method="K", nsim=1000)
+phylosig(tree_synch, PCA_mean$pc.scores[,4],method="K", nsim=1000)
+
+```
 
