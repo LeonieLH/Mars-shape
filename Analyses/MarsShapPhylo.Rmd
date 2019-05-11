@@ -13,6 +13,9 @@ editor_options:
 #I will be using the following R packages in these analyses; geomorph, ape, plyr, abind, and geiger.
 
 ```{r}
+
+# Note: need to have dispRity ticked in the library before you can install landVR
+
 library(rgl)
 library(RRPP)
 library(geomorph)
@@ -166,11 +169,11 @@ names(GPA_Allmean$Csize) <- names(ind.Csize)
 #cHECK that it works with phylogeny
 namecheck=name.check(tree_use,GPA_Allmean$Csize)
 
-#WRITE DOWN WHY THIS WAS DONE
+#Checking to see if the species coordinates and the species on the tree match
 Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
 length(which(!is.na (Matchtest)))
 
-
+#Removing all species in the tree that is not apart of the study
 tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
 
 name.check(tree_synch,GPA_Allmean$Csize)
@@ -605,5 +608,50 @@ rasterImage(legend_image, 440, 220, 465, 160)
 text(393, 213, "High variation", col = "dark grey", cex = 1.4)
 text(420, 168, "Low", col = "dark grey", cex = 1.4)
 dev.off()
+
+```
+
+```{r}
+findMeanSpec(GPA_Allmean$coords) # Find specimen closest to mean
+
+MarmurMesh <- read.ply("D:/Github_Projects/Data/Marmosa_murina_MVZ197429.ply") # Read in mesh of that specimen
+
+shade3d(MarmurMesh) # Check that mesh is read in
+
+Marmurmshape<-mshape(GPA_Allmean$coords)
+
+plotspec(MarmurMesh,Data[,,25], centered = F) # Check that the landmarks match the mesh
+
+MarmurRefMesh <- warpRefMesh(MarmurMesh, Data[,,25], Marmurmshape, centered=F) # This warps the ref mesh to the mean shape
+
+open3d(); shade3d(MarmurRefMesh); writePLY("D:/Github_Projects/Data/Marmurwarptomean.ply",withColors=T) # Saves mesh to directory
+
+
+
+# Warp the refmesh to the min and max of PC1 and PC2 and save mesh to WD
+
+MarmurPC1min <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC1min, method="surface",
+
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC1Min1.ply",withColors=T)
+
+MarmurPC1max <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC1max, method="surface",
+
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC1Max1.ply",withColors=T)
+
+MarmurPC2min <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC2min, method="surface",
+
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC2Min2.ply",withColors=T)
+
+MarmurPC2max <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC2max, method="surface",
+
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC2Max2.ply",withColors=T)
+
+MarmurPC3min <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC3min, method="surface",
+
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC3Min3.ply",withColors=T)
+
+MarmurPC31max <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC3max, method="surface",
+
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC3Max3.ply",withColors=T)
 
 ```
