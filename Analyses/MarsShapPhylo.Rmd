@@ -452,9 +452,17 @@ summary(RestLoco_add)
 #Each PC represents a particular aspect of the overall shape variation, see more in the chunk
 
 ```{r}
+#Entering this code to allow me to see the positive and negative extreme ends of PC2
+PCA_m23 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 2, axis2 = 3, label=dimnames(GPA_Allmean$coords)[[3]])
 
-#Run PCA
+PCA_m31 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 3, axis2 = 1, label=dimnames(GPA_Allmean$coords)[[3]])
+
+#Run PCA for all three partitions
 PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
+
+PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$coords)[[3]])
+
+PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
 
 #Running another PCA that displays the results in morphospace
 plotGMPhyloMorphoSpace(tree_synch, GPA_Allmean$coords )
@@ -549,6 +557,7 @@ hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 
 ```{r}
 setwd("../Data")
+
 # Dorsal view
 open3d(windowRect = c(0, 0, 600, 600))
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
