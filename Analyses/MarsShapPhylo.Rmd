@@ -611,16 +611,18 @@ dev.off()
 
 ```
 
+
+#Warp plots for PC min & max
 ```{r}
 findMeanSpec(GPA_Allmean$coords) # Find specimen closest to mean
 
-MarmurMesh <- read.ply("D:/Github_Projects/Data/Marmosa_murina_MVZ197429.ply") # Read in mesh of that specimen
+MarmurMesh <- read.ply("D:/Downloads/Checkpoint_STL/Marmosa_murina_MVZ197429.ply") # Read in mesh of that specimen
 
 shade3d(MarmurMesh) # Check that mesh is read in
 
 Marmurmshape<-mshape(GPA_Allmean$coords)
 
-plotspec(MarmurMesh,Data[,,25], centered = F) # Check that the landmarks match the mesh
+plotspec(MarmurMesh,digitspec =  Data[,,25], centered = F) # Check that the landmarks match the mesh
 
 MarmurRefMesh <- warpRefMesh(MarmurMesh, Data[,,25], Marmurmshape, centered=F) # This warps the ref mesh to the mean shape
 
@@ -632,26 +634,26 @@ open3d(); shade3d(MarmurRefMesh); writePLY("D:/Github_Projects/Data/Marmurwarpto
 
 MarmurPC1min <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC1min, method="surface",
 
-                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC1Min1.ply",withColors=T)
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/Results/MarmurPC1Min1.ply",withColors=T)
 
 MarmurPC1max <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC1max, method="surface",
 
-                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC1Max1.ply",withColors=T)
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/Results/MarmurPC1Max1.ply",withColors=T)
 
 MarmurPC2min <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC2min, method="surface",
 
-                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC2Min2.ply",withColors=T)
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/Results/MarmurPC2Min2.ply",withColors=T)
 
 MarmurPC2max <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC2max, method="surface",
 
-                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC2Max2.ply",withColors=T)
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/Results/MarmurPC2Max2.ply",withColors=T)
 
 MarmurPC3min <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC3min, method="surface",
 
-                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC3Min3.ply",withColors=T)
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/Results/MarmurPC3Min3.ply",withColors=T)
 
 MarmurPC31max <- plotRefToTarget(Marmurmshape, PCA_mean$pc.shapes$PC3max, method="surface",
 
-                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/MarmurPC3Max3.ply",withColors=T)
+                              mesh = MarmurRefMesh, mag=1); writePLY("D:/Github_Projects/Data/Results/MarmurPC3Max3.ply",withColors=T)
 
 ```
