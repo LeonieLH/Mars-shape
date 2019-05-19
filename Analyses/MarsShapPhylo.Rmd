@@ -30,6 +30,7 @@ library(nlme)
 library(dispRity)
 library(landvR)
 library(png)
+library(viridis)
 
 Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
 
@@ -460,6 +461,8 @@ PCA_m23 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 2, axis2 = 3, label=dimn
 
 PCA_m31 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 3, axis2 = 1, label=dimnames(GPA_Allmean$coords)[[3]])
 
+PCA_m12 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 1, axis2 = 2, label=dimnames(GPA_Allmean$coords)[[3]])
+
 #Run PCA for all three partitions
 PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
 
@@ -545,13 +548,15 @@ class(gpagen.shape) <- "gpagen"
 # Measure extremes of variation from mean on PC1
 PC1.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 1, ordination = ordination, type = "spherical")
 
+PC2.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 2, ordination = ordination, type = "spherical")
+
 # Wrap specimens on the tangent space
 wrap.PCA <- plotTangentSpace(shape$coords, verbose = FALSE)
 
 # Select extreme specimens (the ones that make the warp-meshes)
 hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
 hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
-
+hypothetical.3 <- wrap.PCA$pc.shapes[[3]]
 
 ```
 
@@ -572,6 +577,18 @@ open3d(windowRect = c(0, 0, 600, 600))
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
 view3d(phi = 90)
 rgl.snapshot("../PC1heatmap_lat.png")
+
+#range of variation along PC2
+open3d(windowRect = c(0, 0, 600, 600))
+PC2.var.plot <- procrustes.var.plot(hypothetical.2, hypothetical.1, col = inferno, col.val = PC2.var[, "radius"], labels = F)
+view3d(phi = 0)  # flip cranium
+rgl.snapshot("../PC2heatmap_dor.png")  # save screenshot for multipanel plot
+
+#range of variation along PC3
+open3d(windowRect = c(0, 0, 600, 600))
+PC3.var.plot <- procrustes.var.plot(hypothetical.3, hypothetical.1, col = heat.colors, col.val = PC3.var[, "radius"], labels = F)
+view3d(phi = 0)  # flip cranium
+rgl.snapshot("../PC2heatmap_dor.png")  # save screenshot for multipanel plot
 ```
 
 ### Prep images for multi-panel figure
