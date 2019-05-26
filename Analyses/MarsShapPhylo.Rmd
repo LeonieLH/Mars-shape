@@ -31,6 +31,8 @@ library(dispRity)
 library(landvR)
 library(png)
 library(viridis)
+library(stringr)
+library(scales)
 
 Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
 
@@ -127,6 +129,8 @@ tree_use$tip.label[20] <- "Marmosa_demerarae"
 tree_use$tip.label[19] <- "Marmosa_alstoni"
 tree_use$tip.label[130] <- "Petaurus_australis"
 
+
+plotTree(tree_synch)
 
 
 ```
@@ -456,7 +460,7 @@ summary(RestLoco_add)
 #Each PC represents a particular aspect of the overall shape variation, see more in the chunk
 
 ```{r}
-#Entering this code to allow me to see the positive and negative extreme ends of PC2
+#Entering this code to allow me to see the positive and negative extreme ends of PC2 & 3
 PCA_m23 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 2, axis2 = 3, label=dimnames(GPA_Allmean$coords)[[3]])
 
 PCA_m31 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 3, axis2 = 1, label=dimnames(GPA_Allmean$coords)[[3]])
@@ -471,10 +475,17 @@ PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$co
 PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
 
 #Running another PCA that displays the results in morphospace
-plotGMPhyloMorphoSpace(tree_synch, GPA_Allmean$coords )
+plotGMPhyloMorphoSpace(tree_synch, GPA_Allmean$coords, tip.labels = FALSE)
 
-#Displaying the PC summary
+plotGMPhyloMorphoSpace(tree_synch, GPA_Basimean$coords, tip.labels =TRUE)
+
+plotGMPhyloMorphoSpace(tree_synch, GPA_Restmean$coords, tip.labels =TRUE)
+#Displaying the PC summary for all three landmark groups
 PCA_mean$pc.summary$importance
+
+PCA_basi$pc.summary$importance
+
+PCA_rest$pc.summary$importance
 
 
 #Does size play a role in the main variation (as it often does)?
@@ -496,7 +507,9 @@ summary(PC2_Csize)
 summary(PC3_Csize)
 summary(PC4_Csize)
 
-par(mfrow=c(2,2))
+
+#Graphs with species' name
+par(mfrow=c(3,1))
 
 plot(PC1~Csize, data=PC_Csize)
 abline (lm(PC_Csize$PC1~PC_Csize$Csize))
@@ -513,6 +526,21 @@ text(PC_Csize$PC3~PC_Csize$Csize, labels=rownames(PC_Csize))
 plot(PC4~Csize, data=PC_Csize)
 abline (lm(PC_Csize$PC4~PC_Csize$Csize))
 text(PC_Csize$PC4~PC_Csize$Csize, labels=rownames(PC_Csize))
+
+#Graphs with just points
+
+par(mfrow=c(3,1))
+
+plot(PC1~Csize, data=PC_Csize, type="p",pch=19, col=viridis(1))
+abline (lm(PC_Csize$PC1~PC_Csize$Csize))
+
+
+plot(PC2~Csize, data=PC_Csize, type="p",pch=19, col=viridis(1))
+abline (lm(PC_Csize$PC2~PC_Csize$Csize))
+
+
+plot(PC3~Csize, data=PC_Csize, type="p",pch=19, col=viridis(1))
+abline (lm(PC_Csize$PC3~PC_Csize$Csize))
 
 
 #Checking phylogenetic signal in PC1; add justification of K reference in thesis; think about if we want this in because it is very different to shape physig.
@@ -568,15 +596,15 @@ setwd("../Data")
 
 # Dorsal view
 open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = viridis, col.val = PC1.var[, "radius"], labels = F)
 view3d(phi = 0)  # flip cranium
-rgl.snapshot("../PC1heatmap_dor.png")  # save screenshot for multipanel plot
+rgl.snapshot("../PC1heatmap_dor1.png")  # save screenshot for multipanel plot
 
 # Lateral view
 open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = viridis, col.val = PC1.var[, "radius"], labels = F)
 view3d(phi = 90)
-rgl.snapshot("../PC1heatmap_lat.png")
+rgl.snapshot("../PC1heatmap_lat1.png")
 
 #range of variation along PC2
 open3d(windowRect = c(0, 0, 600, 600))
@@ -595,8 +623,8 @@ rgl.snapshot("../PC2heatmap_dor.png")  # save screenshot for multipanel plot
 This step assumes you have ImageMagik installed on your computer
 ```{r}
 system("mogrify ../Data/Processed/PC1heatmap_*.png -trim ../Data/Processed/*.png")  # removes whitespace (requires ImageMagik)
-dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
-lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
+dor <- readPNG("../Mars-shape/PC1heatmap_dor1.png")
+lat <- readPNG("../Mars-shape/PC1heatmap_lat1.png")
 
 ```
 
@@ -620,7 +648,7 @@ rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
 text(0, dim(dor)[1]-10, "b", cex = 2)
 
 # Make gradient legend
-legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
+legend_image <- as.raster(matrix(viridis(20), ncol = 1))
 rasterImage(legend_image, 440, 220, 465, 160)
 text(393, 213, "High variation", col = "dark grey", cex = 1.4)
 text(420, 168, "Low", col = "dark grey", cex = 1.4)
