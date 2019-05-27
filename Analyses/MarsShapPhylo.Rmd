@@ -513,7 +513,7 @@ par(mfrow=c(3,1))
 
 plot(PC1~Csize, data=PC_Csize)
 abline (lm(PC_Csize$PC1~PC_Csize$Csize))
-text(PC_Csize$PC1~PC_Csize$Csize, labels=rownames(PC_Csize))
+text(PC_Csize$PC1~PC_Csize$Csize, labels=rownames(PC_Csize), col=col.gp)
 
 plot(PC2~Csize, data=PC_Csize)
 abline (lm(PC_Csize$PC2~PC_Csize$Csize))
@@ -526,12 +526,39 @@ text(PC_Csize$PC3~PC_Csize$Csize, labels=rownames(PC_Csize))
 plot(PC4~Csize, data=PC_Csize)
 abline (lm(PC_Csize$PC4~PC_Csize$Csize))
 text(PC_Csize$PC4~PC_Csize$Csize, labels=rownames(PC_Csize))
+# Making a clade-level colour vector for graphs
+
+show_col(viridis_pal()(40)) #Showing the 40 colours present in the viridis package palette
+
+colclade<-c("mediumpurple2", "darkorange","yellowgreen","dodgerblue3", "firebrick1", "violetred", "forestgreen", "darkorchid", "darkblue") #Nine specific colours for the nine clades
+names(colclade) <- levels(speclist$Clade) # assign levels to colours
+col.gp <- colclade[match(speclist$Clade, names(colclade))] # magic!
+head(col.gp) # see the result
+
+#Making a short form vector of species names of type “G.sp” for plotting
+Gen.sp <- matrix(unlist(strsplit(as.character(speclist$Specimen), "_")),
+ncol=2, byrow = T)
+# string split is used to separate a character string
+head(Gen.sp)
+Gen.sp <- paste(substr(Gen.sp[,1], 1, 1), substr(Gen.sp[,2], 1, 3), sep=".")
+head(Gen.sp) # see the result
+
+plot(PC1~Csize, data=PC_Csize, type="p",pch=21, bg=col.gp, cex=1.5)
+abline (lm(PC_Csize$PC1~PC_Csize$Csize))
+text(PC_Csize$PC1~PC_Csize$Csize, labels=Gen.sp, pos=1)
+legend(x=10.9,y=-0.125,
+legend=c("Caenolestid","Dasyurom.", "Didelphid","Macropod",  expression(italic("Dromiciops")), "Peramelem.","Petaroid", "Phalangeroid",
+"Vombatiform"),
+pt.bg=c(unique(aggregate(col.gp ~ speclist$Clade, FUN=unique)[,-1]),"light grey"),
+pch=c(rep(21,11),24), cex=1, pt.cex=1, ncol = 3, bg= "light grey", box.col="light grey",
+text.width = 0.52, y.intersp = 1.3)
+
 
 #Graphs with just points
 
 par(mfrow=c(3,1))
 
-plot(PC1~Csize, data=PC_Csize, type="p",pch=19, col=viridis(1))
+plot(PC1~Csize, data=PC_Csize, type="p",pch=19, col=colclade)
 abline (lm(PC_Csize$PC1~PC_Csize$Csize))
 
 
