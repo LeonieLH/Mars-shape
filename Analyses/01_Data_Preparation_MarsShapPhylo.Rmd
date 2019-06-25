@@ -1,0 +1,290 @@
+---
+title: "01_Mars_Shape_Phylo_Prep"
+author: "Vera Weisbecker"
+date: "26 June 2019"
+output: html_document
+---
+
+
+## load required packages
+
+```{r }
+library(geomorph)
+library(ape)
+library(plyr)
+library(abind)
+library(geiger)
+library(caper)
+library(devtools)
+library(phytools)
+```
+
+## Read in coordinates
+
+
+```{r }
+
+filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
+
+#Next step is to remove the Museum IDs from the specimen names   
+  
+  tmp <- matrix(unlist(strsplit(filelist, "_")),ncol=3,byrow = TRUE)   
+
+  filelist_species <- paste(tmp[,1], tmp[,2], sep="_")
+
+  
+  names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
+  filelist <- paste("../Data/Raw/Coordinates/", filelist, sep="") # rename with path
+  coords <- NULL # make empty object that will be filled with 3D array of coordinate data
+  for (i in 1:length(filelist)){
+    temp  <- read.morphologika(filelist[i]) 
+    k <- dim(temp)[1] 
+    coords <- rbind(coords, two.d.array(temp)) }
+  Data <- arrayspecs(coords, k, 3) 
+  dimnames(Data)[[3]] <- filelist_species
+ # remove(i, filelist, names, k, coords, temp) # clean up environment
+  
+  #Double check that the 3D info is entered properly
+  plot3d(Data[,,4], asp=FALSE)
+  text3d(Data[,,4], texts=c(1:58))
+  
+```
+
+#Read in classifier file that contains the species name, locomotion type, diet, and clade
+
+
+```{r}
+
+speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
+rownames(speclist) <-speclist$Specimen
+
+```
+
+#Importation of partition map, ensure it's a factor
+
+
+The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
+
+```{r}
+
+### Import the  partition map, ensure it's a factor
+part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
+part.gp=as.factor(part.gp$V1)
+
+
+```
+
+
+
+#Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
+#This will make it possible to allow me to analyse their shape variation relative to each other
+
+
+#GPA for all coordinates
+```{r}
+#Run GPA
+GPA_AllSpecimens <- gpagen(Data)
+
+
+#AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
+
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
+
+#Remember= dim() is the dimensions of an object
+
+
+# shape data
+ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
+rownames(ind.coords) <- unique(dimnames(GPA_AllSpecimens$coords)[[3]])
+ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
+# centroid size data
+ind.Csize <- as.vector(aggregate(GPA_AllSpecimens$Csize ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1])
+names(ind.Csize) <- unique(names(GPA_AllSpecimens$Csize))
+# ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
+
+#are dimnames identical i.e. will the aligned properly?
+dimnames(GPA_AllSpecimens$coords)[[3]]==names(GPA_AllSpecimens$Csize)
+
+dimnames(ind.coords)[[3]]==names(ind.Csize)
+
+#Turning into gdf frame and giving names
+GPA_Allmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+dimnames(GPA_Allmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_Allmean$Csize) <- names(ind.Csize)
+
+#Making coordinate set with size removed
+
+
+
+```
+
+
+#GPA for basicranial landmarks
+```{r}
+#Subset basicranial landmarks
+Data_basi=Data[which(part.gp==2),,]
+#double-check that the correct number of landmarks has been subtracted
+attributes(Data_basi)
+
+#GPA
+GPA_basi <- gpagen(Data_basi)
+
+
+#AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
+
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
+
+#Remember= dim() is the dimensions of an object
+
+
+# shape data
+basi.coords <- aggregate(two.d.array(GPA_basi$coords) ~ dimnames(GPA_basi$coords)[[3]], FUN=mean)[,-1]
+rownames(basi.coords) <- unique(dimnames(GPA_basi$coords)[[3]])
+basi.coords <- arrayspecs(basi.coords, p=ncol(basi.coords)/3, k=3)
+# centroid size data
+basi.Csize <- as.vector(aggregate(GPA_basi$Csize ~ dimnames(GPA_basi$coords)[[3]], FUN=mean)[,-1])
+names(basi.Csize) <- unique(names(GPA_basi$Csize))
+# basi.Csize - These are the individuals Csize data for plotting specimen allometry graphs
+
+#are dimnames identical i.e. will the aligned properly?
+dimnames(GPA_basi$coords)[[3]]==names(GPA_basi$Csize)
+
+dimnames(basi.coords)[[3]]==names(basi.Csize)
+
+#Turning into gdf frame and giving names
+GPA_Basimean <-geomorph.data.frame(coords=basi.coords, Csize=basi.Csize)
+dimnames(GPA_Basimean$coords)[[3]] <-dimnames(basi.coords)[[3]]
+names(GPA_Basimean$Csize) <- names(basi.Csize)
+
+
+```
+
+
+
+#GPA for the REST OF THE SKULL
+
+
+```{r}
+
+#Subset the rest of the skull's landmarks lms
+Data_reskull=Data[which(part.gp==1),,]
+#double-check that the correct number of landmarks has been subtracted
+attributes(Data_reskull)
+
+#GPA
+
+GPA_reskull <- gpagen(Data_reskull)
+
+
+#AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
+
+#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
+
+#Remember= dim() is the dimensions of an object
+
+# shape data
+ind.coords <- aggregate(two.d.array(GPA_reskull$coords) ~ dimnames(GPA_reskull$coords)[[3]], FUN=mean)[,-1]
+rownames(ind.coords) <- unique(dimnames(GPA_reskull$coords)[[3]])
+ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
+# centroid size data
+ind.Csize <- as.vector(aggregate(GPA_reskull$Csize ~ dimnames(GPA_reskull$coords)[[3]], FUN=mean)[,-1])
+names(ind.Csize) <- unique(names(GPA_reskull$Csize))
+# ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
+
+#are dimnames identical i.e. will the aligned properly?
+dimnames(GPA_reskull$coords)[[3]]==names(GPA_reskull$Csize)
+
+dimnames(ind.coords)[[3]]==names(ind.Csize)
+
+#Turning into gdf frame and giving names
+GPA_Restmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+dimnames(GPA_Restmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
+names(GPA_Restmean$Csize) <- names(ind.Csize)
+
+
+```
+# PHYLOGENY 
+
+#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
+
+```{r}
+#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
+#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
+
+tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
+tree_use <- tree[1]$tree_1
+
+###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label
+tree_use$tip.label[5]  
+#This shows particular tip label (without the number present this code will provide you with all the tip labels)
+
+tree_use$tip.label[5] <- "Caluromys_derbianus"
+tree_use$tip.label[1] <- "Lestoros_inca"
+tree_use$tip.label[178] <- "Dendrolagus_inustus"
+tree_use$tip.label[30] <- "Philander_andersoni"
+tree_use$tip.label[124] <- "Phalanger_mimicus"
+tree_use$tip.label[66] <- "Planigale_ingrami"
+tree_use$tip.label[67] <- "Sminthopsis_murina"
+tree_use$tip.label[39] <- "Thylamys_elegans"
+tree_use$tip.label[20] <- "Marmosa_demerarae"
+tree_use$tip.label[19] <- "Marmosa_alstoni"
+tree_use$tip.label[130] <- "Petaurus_australis"
+
+
+#cHECK that it works with phylogeny
+namecheck=name.check(tree_use,GPA_Allmean$Csize)
+
+#Checking to see if the species coordinates and the species on the tree match
+Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
+length(which(!is.na (Matchtest)))
+
+#Removing all species in the tree that is not apart of the study
+tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
+
+#break up polytomies
+
+name.check(tree_synch,GPA_Allmean$Csize)
+
+#plot(tree_synch, cex=1)
+
+```
+
+#Making coordinate datasets with size correction
+```{r}
+
+allom_all<-procD.pgls(coords~Csize, tree_synch, data=GPA_Allmean, iter=999)
+
+
+allom_basi<-procD.pgls(coords~Csize, tree_synch, data=GPA_Basimean, iter=999)
+
+
+allom_rest<-procD.pgls(coords~Csize, tree_synch, data=GPA_Restmean, iter=999)
+
+
+allom_res_all <-arrayspecs(allom_all$pgls.residuals,58,3)
+
+attributes(GPA_Allmean$coords)
+attributes(allom_res_all)
+
+open3d()
+plot3d(allom_res_all[,,5], asp=FALSE)
+text3d(allom_res_all[,,5], texts=c(1:58))
+
+open3d()
+plot3d(GPA_Allmean$coords[,,5], asp=FALSE)
+text3d(GPA_Allmean$coords[,,5], texts = c(1:58))
+
+
+```
+
+
+#Package into RDA file so it's available in the analyses
+```{r}
+
+save(Data,GPA_Allmean,GPA_Basimean,GPA_Restmean, speclist,part.gp, tree_synch, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
+
+
+
+```
+
