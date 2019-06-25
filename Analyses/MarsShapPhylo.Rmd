@@ -40,14 +40,9 @@ Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
 ```
 #read in coordinates
 
-#Prior to investigating the three predictions of this study, I will input and prepare my data.
+#Prior to investigating the three predictions of this study, input and prepare  data.
 ```{r}
 
-#RUN LINE BY LINE! LATER DOWN THE LINE ASK THOMAS HOW TO FIX THIS
-
-#This working directory needs to be set for this chunk because otherwise it won't find the files. It is an issue of rmd talking to R itself.
-setwd("E:/Github_Projects/Mars-shape/Data/Raw/Coordinates") #Vera's computer
-setwd("D:/Github_Projects/Mars-shape/Data/Raw/Coordinates")  #Leonie's computer
 
 
 filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
@@ -101,39 +96,7 @@ part.gp=as.factor(part.gp$V1)
 
 ```
 
-# PHYLOGENY 
 
-#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
-
-```{r}
-#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
-#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
-
-tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
-tree_use <- tree[1]$tree_1
-
-###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
-tree_use$tip.label
-tree_use$tip.label[5]  
-#This shows particular tip label (without the number present this code will provide you with all the tip labels)
-
-tree_use$tip.label[5] <- "Caluromys_derbianus"
-tree_use$tip.label[1] <- "Lestoros_inca"
-tree_use$tip.label[178] <- "Dendrolagus_inustus"
-tree_use$tip.label[30] <- "Philander_andersoni"
-tree_use$tip.label[124] <- "Phalanger_mimicus"
-tree_use$tip.label[66] <- "Planigale_ingrami"
-tree_use$tip.label[67] <- "Sminthopsis_murina"
-tree_use$tip.label[39] <- "Thylamys_elegans"
-tree_use$tip.label[20] <- "Marmosa_demerarae"
-tree_use$tip.label[19] <- "Marmosa_alstoni"
-tree_use$tip.label[130] <- "Petaurus_australis"
-
-
-plotTree(tree_synch)
-
-
-```
 
 #Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
 #This will make it possible to allow me to analyse their shape variation relative to each other
@@ -170,19 +133,6 @@ dimnames(ind.coords)[[3]]==names(ind.Csize)
 GPA_Allmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 dimnames(GPA_Allmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
 names(GPA_Allmean$Csize) <- names(ind.Csize)
-
-#cHECK that it works with phylogeny
-namecheck=name.check(tree_use,GPA_Allmean$Csize)
-
-#Checking to see if the species coordinates and the species on the tree match
-Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
-length(which(!is.na (Matchtest)))
-
-#Removing all species in the tree that is not apart of the study
-tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
-
-name.check(tree_synch,GPA_Allmean$Csize)
-
 
 ```
 
@@ -273,7 +223,52 @@ names(GPA_Restmean$Csize) <- names(ind.Csize)
 
 ```
 
+# PHYLOGENY 
 
+#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
+
+```{r}
+#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
+#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
+
+tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
+tree_use <- tree[1]$tree_1
+
+###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label
+tree_use$tip.label[5]  
+#This shows particular tip label (without the number present this code will provide you with all the tip labels)
+
+tree_use$tip.label[5] <- "Caluromys_derbianus"
+tree_use$tip.label[1] <- "Lestoros_inca"
+tree_use$tip.label[178] <- "Dendrolagus_inustus"
+tree_use$tip.label[30] <- "Philander_andersoni"
+tree_use$tip.label[124] <- "Phalanger_mimicus"
+tree_use$tip.label[66] <- "Planigale_ingrami"
+tree_use$tip.label[67] <- "Sminthopsis_murina"
+tree_use$tip.label[39] <- "Thylamys_elegans"
+tree_use$tip.label[20] <- "Marmosa_demerarae"
+tree_use$tip.label[19] <- "Marmosa_alstoni"
+tree_use$tip.label[130] <- "Petaurus_australis"
+
+
+#cHECK that it works with phylogeny
+namecheck=name.check(tree_use,GPA_Allmean$Csize)
+
+#Checking to see if the species coordinates and the species on the tree match
+Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
+length(which(!is.na (Matchtest)))
+
+#Removing all species in the tree that is not apart of the study
+tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
+
+#break up polytomies
+
+name.check(tree_synch,GPA_Allmean$Csize)
+
+plot(tree_synch, cex=1)
+
+```
 #Images for partitions
 
 
@@ -382,7 +377,7 @@ summary(AllRest)
 
 Evolutionary rates
 
-#Phylogenetic signalling
+#Phylogenetic signal
 
 
 ```{r}
@@ -460,12 +455,6 @@ summary(RestLoco_add)
 #Each PC represents a particular aspect of the overall shape variation, see more in the chunk
 
 ```{r}
-#Entering this code to allow me to see the positive and negative extreme ends of PC2 & 3
-PCA_m23 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 2, axis2 = 3, label=dimnames(GPA_Allmean$coords)[[3]])
-
-PCA_m31 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 3, axis2 = 1, label=dimnames(GPA_Allmean$coords)[[3]])
-
-PCA_m12 <- plotTangentSpace(GPA_Allmean$coords, axis1 = 1, axis2 = 2, label=dimnames(GPA_Allmean$coords)[[3]])
 
 #Run PCA for all three partitions
 PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
@@ -474,12 +463,141 @@ PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$co
 
 PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
 
-#Running another PCA that displays the results in morphospace
-plotGMPhyloMorphoSpace(tree_synch, GPA_Allmean$coords, tip.labels = FALSE)
+```
 
-plotGMPhyloMorphoSpace(tree_synch, GPA_Basimean$coords, tip.labels =TRUE)
+Setting up some plotting parameters
 
-plotGMPhyloMorphoSpace(tree_synch, GPA_Restmean$coords, tip.labels =TRUE)
+```{r}
+
+colclade<-c("mediumpurple2", "darkorange","yellowgreen","dodgerblue3", "firebrick1", "violetred", "forestgreen", "darkorchid", "darkblue") #Nine specific colours for the nine clades
+names(colclade) <- levels(speclist$Clade) # assign levels to colours
+col.gp <- colclade[match(speclist$Clade, names(colclade))] # magic!
+head(colclade) # see the result
+
+#Making a short form vector of species names of type for plotting
+Gen.sp <- matrix(unlist(strsplit(as.character(speclist$Specimen), "_")),
+ncol=2, byrow = T)
+# string split is used to separate a character string
+head(Gen.sp)
+Gen.sp <- paste(substr(Gen.sp[,1], 1, 1), substr(Gen.sp[,2], 1, 3), sep=".")
+head(Gen.sp) # see the result
+
+```
+
+
+#Phylogenetic signal in PC scores; the below is just a prototype and not working very well. I don't understand the need to ultrametricise for OU estimates and I am unsure how reliable this all is given my data.
+
+
+```{r}
+
+PCA_score_list <- list("Basi"=PCA_basi$pc.scores, "Rest"=PCA_rest$pc.scores, "All"=PCA_mean$pc.scores)
+
+
+##Make function to determine W to later feed into loop
+
+fit.W <- function(variable, tree){
+
+
+fitBM <-fitContinuous(tree,variable, model="BM")
+fitOU <-fitContinuous(tree,variable, model="OU")
+fitEB <-fitContinuous(tree,variable, model="EB")
+
+AICs <- c(fitBM$opt$aicc,fitOU$opt$aicc,fitEB$opt$aicc)
+AICmin <- AICs-min(AICs)
+W <- exp(-0.5*AICmin)/sum(exp(-0.5*AICmin))
+
+W <- setNames(W, c("BM", "OU","EB"))
+
+return(W)
+
+}
+
+#Now run W determinant on all
+
+W_list <- list()
+
+#number of partition PCAs (3 - basi, rest and mean)
+
+for (Partitions in 1:3) {
+  
+        W_list[[Partitions]] <- fit.W (PCA_score_list[[Partitions]][,1], compute.brlen(tree_synch))
+        }
+
+
+W_list
+
+#The below should not be run on non-BM data but here it is for now.
+
+PCA_score_list <- list("Basi"=PCA_basi$pc.scores, "Rest"=PCA_rest$pc.scores, "All"=PCA_mean$pc.scores)
+                       
+                       
+phylosig_comp <- matrix(nrow=3, ncol = 4)
+rownames (phylosig_comp)<- names(PCA_score_list)
+colnames(phylosig_comp) <- dimnames(PCA_score_list[[1]])[[2]][1:4]
+
+#number of PCAs (3 - basi, rest and eman)
+for (PCAs in 1:3){
+      #number of PCs considered (4 here but doesn't matter)
+      for (PCscores in 1:4){
+        
+        phylosig_comp [PCAs,PCscores] <- phylosig(tree_synch,PCA_score_list[[PCAs]][,PCscores], method="K", nsim=1000)
+        
+      }
+  }
+
+as.data.frame(phylosig_comp)
+
+
+
+```
+
+PCA_score_list[[3]][,4]
+
+phylosig(tree_synch,PCA_score_list[1]$pc.scores[,2],method="K", nsim=1000)
+
+phylosig(tree_synch, PCA_basi$pc.scores[,1],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,2],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,3],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,4],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,5],method="K", nsim=1000)
+
+phylosig(tree_synch, PCA_basi$pc.scores[,1],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,2],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,3],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,4],method="K", nsim=1000)
+phylosig(tree_synch, PCA_basi$pc.scores[,5],method="K", nsim=1000)
+
+
+#Plotting the PCA
+
+```{r}
+
+plot.new()
+par(mfrow=c(2,1))
+par(mar=c(1.2,5,1.2,1.2))
+
+plot(PCA_score_list$Basi[,1], PCA_score_list$Basi[,2], type="p",pch=21, bg=col.gp, cex=1.5, ylab="Basicranium");
+
+plot(PCA_score_list$Rest[,1], PCA_score_list$Rest[,2], type="p",pch=21, bg=col.gp, cex=1.5, ylab="Rest of Skull")
+
+plot(PCA_score_list$All[,1], PCA_score_list$All[,2], type="p",pch=21, bg=col.gp, cex=1.5)
+
+
+legend(x=10.9,y=-0.125,
+legend=c("Caenolestid","Dasyurom.", "Didelphid","Macropod",  expression(italic("Dromiciops")), "Peramelem.","Petaroid", "Phalangeroid",
+"Vombatiform"),
+pt.bg=c(unique(aggregate(col.gp ~ speclist$Clade, FUN=unique)[,-1]),"light grey"),
+pch=c(rep(21,11),24), cex=1, pt.cex=1, ncol = 3, bg= "light grey", box.col="light grey",
+text.width = 0.52, y.intersp = 1.3)
+
+
+
+```
+
+
+
+```{r}
+
 #Displaying the PC summary for all three landmark groups
 PCA_mean$pc.summary$importance
 
@@ -502,46 +620,34 @@ PC1_Csize <- gls(PC1~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_C
 PC2_Csize <- gls(PC2~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
 PC3_Csize <- gls(PC3~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
 PC4_Csize <- gls(PC4~Csize, correlation=corBrownian(1,phy=tree_synch), data=PC_Csize)
-summary(PC1_Csize)
-summary(PC2_Csize)
-summary(PC3_Csize)
-summary(PC4_Csize)
+PC1_res <-summary(PC1_Csize)
+PC2_res<-summary(PC2_Csize)
+PC3_res <- summary(PC3_Csize)
+PC4_res <- summary(PC4_Csize)
 
 
-#Graphs with species' name
+#Allometry graphs
+plot.new()
 par(mfrow=c(3,1))
+par(mar=c(1.2,5,1.2,1.2))
 
-plot(PC1~Csize, data=PC_Csize)
-abline (lm(PC_Csize$PC1~PC_Csize$Csize))
-text(PC_Csize$PC1~PC_Csize$Csize, labels=rownames(PC_Csize), col=col.gp)
+plot(PC1~Csize, data=PC_Csize,pch=19);
+abline (lm(PC_Csize$PC1~PC_Csize$Csize));
+legend("bottomleft", bty="n",text.font=2,text.col="forest green", cex=1.1,paste("pgls coeff=", round(PC1_res$coefficients[2], 3), "p=",round(PC1_res$tTable[8],3) ))
 
-plot(PC2~Csize, data=PC_Csize)
-abline (lm(PC_Csize$PC2~PC_Csize$Csize))
-text(PC_Csize$PC2~PC_Csize$Csize, labels=rownames(PC_Csize))
+plot(PC2~Csize, data=PC_Csize, pch=19);
+abline (lm(PC_Csize$PC2~PC_Csize$Csize));
+legend("bottomleft", bty="n",text.font=2,text.col="forest green", cex=1.1,paste("pgls coeff=", round(PC2_res$coefficients[2], 3), "p=",round(PC2_res$tTable[8],3) ))
 
-plot(PC3~Csize, data=PC_Csize)
-abline (lm(PC_Csize$PC3~PC_Csize$Csize))
-text(PC_Csize$PC3~PC_Csize$Csize, labels=rownames(PC_Csize))
 
-plot(PC4~Csize, data=PC_Csize)
-abline (lm(PC_Csize$PC4~PC_Csize$Csize))
-text(PC_Csize$PC4~PC_Csize$Csize, labels=rownames(PC_Csize))
-# Making a clade-level colour vector for graphs
+plot(PC3~Csize, data=PC_Csize, pch=19);
+abline (lm(PC_Csize$PC3~PC_Csize$Csize));
+legend("bottomleft",bty="n", text.font=2,text.col="forest green", cex=1.1, paste("pgls coeff=", round(PC3_res$coefficients[2], 3), "p=",round(PC3_res$tTable[8],3) ))
 
-show_col(viridis_pal()(40)) #Showing the 40 colours present in the viridis package palette
 
-colclade<-c("mediumpurple2", "darkorange","yellowgreen","dodgerblue3", "firebrick1", "violetred", "forestgreen", "darkorchid", "darkblue") #Nine specific colours for the nine clades
-names(colclade) <- levels(speclist$Clade) # assign levels to colours
-col.gp <- colclade[match(speclist$Clade, names(colclade))] # magic!
-head(col.gp) # see the result
+#show_col(viridis_pal()(40)) #Showing the 40 colours present in the viridis package palette
 
-#Making a short form vector of species names of type “G.sp” for plotting
-Gen.sp <- matrix(unlist(strsplit(as.character(speclist$Specimen), "_")),
-ncol=2, byrow = T)
-# string split is used to separate a character string
-head(Gen.sp)
-Gen.sp <- paste(substr(Gen.sp[,1], 1, 1), substr(Gen.sp[,2], 1, 3), sep=".")
-head(Gen.sp) # see the result
+
 
 plot(PC1~Csize, data=PC_Csize, type="p",pch=21, bg=col.gp, cex=1.5)
 abline (lm(PC_Csize$PC1~PC_Csize$Csize))
@@ -569,13 +675,6 @@ abline (lm(PC_Csize$PC2~PC_Csize$Csize))
 plot(PC3~Csize, data=PC_Csize, type="p",pch=19, col=viridis(1))
 abline (lm(PC_Csize$PC3~PC_Csize$Csize))
 
-
-#Checking phylogenetic signal in PC1; add justification of K reference in thesis; think about if we want this in because it is very different to shape physig.
-
-phylosig(tree_synch, PCA_mean$pc.scores[,1],method="K", nsim=1000)
-phylosig(tree_synch, PCA_mean$pc.scores[,2],method="K", nsim=1000)
-phylosig(tree_synch, PCA_mean$pc.scores[,3],method="K", nsim=1000)
-phylosig(tree_synch, PCA_mean$pc.scores[,4],method="K", nsim=1000)
 
 ```
 
