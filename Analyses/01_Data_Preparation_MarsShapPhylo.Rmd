@@ -75,11 +75,6 @@ part.gp=as.factor(part.gp$V1)
 ```
 
 
-
-#Continuing data preparation, the function 'gpagen' will run a Generalised Procrustes Analysis (GPA). GPA will take the specimen landmarks and superimpose them, thereby removing all the differences in size, orientation and location between each specimen. What remains are landmark coordinates tha provide the shape variation between species.
-#This will make it possible to allow me to analyse their shape variation relative to each other
-
-
 #GPA for all coordinates
 ```{r}
 #Run GPA
@@ -88,8 +83,6 @@ GPA_AllSpecimens <- gpagen(Data)
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
-#Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
-
 #Remember= dim() is the dimensions of an object
 
 
@@ -97,9 +90,13 @@ GPA_AllSpecimens <- gpagen(Data)
 ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
 rownames(ind.coords) <- unique(dimnames(GPA_AllSpecimens$coords)[[3]])
 ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
+#ind.coords_gpa <- gpagen (ind.coords) #double-sliding the configurations seems dubious to me.
+
 # centroid size data
 ind.Csize <- as.vector(aggregate(GPA_AllSpecimens$Csize ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1])
 names(ind.Csize) <- unique(names(GPA_AllSpecimens$Csize))
+
+
 # ind.Csize - These are the individuals Csize data for plotting specimen allometry graphs
 
 #are dimnames identical i.e. will the aligned properly?
@@ -109,12 +106,11 @@ dimnames(ind.coords)[[3]]==names(ind.Csize)
 
 #Turning into gdf frame and giving names
 GPA_Allmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
+
+GPA_allmean_consensus <- GPA_AllSpecimens$consensus
+
 dimnames(GPA_Allmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
 names(GPA_Allmean$Csize) <- names(ind.Csize)
-
-#Making coordinate set with size removed
-
-
 
 ```
 
@@ -156,6 +152,7 @@ GPA_Basimean <-geomorph.data.frame(coords=basi.coords, Csize=basi.Csize)
 dimnames(GPA_Basimean$coords)[[3]] <-dimnames(basi.coords)[[3]]
 names(GPA_Basimean$Csize) <- names(basi.Csize)
 
+GPA_basimean_consensus <-GPA_basi$consensus
 
 ```
 
@@ -201,6 +198,7 @@ GPA_Restmean <-geomorph.data.frame(coords=ind.coords, Csize=ind.Csize)
 dimnames(GPA_Restmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
 names(GPA_Restmean$Csize) <- names(ind.Csize)
 
+GPA_restmean_consensus <- GPA_reskull$consensus
 
 ```
 # PHYLOGENY 
@@ -251,29 +249,35 @@ name.check(tree_synch,GPA_Allmean$Csize)
 ```
 
 #Making coordinate datasets with size correction
-```{r}
+
+#NOTE THAT THIS CURRENTLY USES THE CONSENSUS CONFIGURATION OF THE DATASET WITH ALL SPECIMENS! I NEED TO FIX THIS ABOVE BUT I ALSO THINK THAT LEONIE FORGOT OT RE-RUN THE GPA ON THE COLLAPSED DATASET
+```{r, echo=FALSE}
+
+
+#THE BELOW USES THE COORDINATES OF THE DATASET WITH SPECIES AVERAGED; CSIZE WITH SPECIES AVERAGED;AND CONSENSUS CONFIG OF THE COORDINAGES WITH THE SPECIES AVERAGED. BUT THIS MEANS THE DATASET WITH THE SPECIES AVERAGED HAD TO GO THROUGH ANOTHER GPA, WHICH I BELIEVE IS CORRECT BUT SHOULD BE DOUBLE CHECKED
 
 allom_all<-procD.pgls(coords~Csize, tree_synch, data=GPA_Allmean, iter=999)
+summary(allom_all)
+allom_res_all <-arrayspecs(allom_all$pgls.residuals,dim(GPA_Allmean$coords)[[1]],3)
+Allom_all_plus_consensus <- allom_res_all + array(GPA_allmean_consensus, dim(allom_res_all))
 
 
 allom_basi<-procD.pgls(coords~Csize, tree_synch, data=GPA_Basimean, iter=999)
-
+summary(allom_basi)
+allom_res_basi <-arrayspecs(allom_basi$pgls.residuals,dim(GPA_Basimean$coords)[[1]],3)
+Allom_basi_plus_consensus <- allom_res_basi + array(GPA_basimean_consensus, dim(allom_res_basi))
 
 allom_rest<-procD.pgls(coords~Csize, tree_synch, data=GPA_Restmean, iter=999)
+summary(allom_rest)
+allom_res_rest <-arrayspecs(allom_rest$pgls.residuals,dim(GPA_Restmean$coords)[[1]],3)
+Allom_rest_plus_consensus <- allom_res_rest + array(GPA_restmean_consensus, dim(allom_res_rest))
 
 
-allom_res_all <-arrayspecs(allom_all$pgls.residuals,58,3)
 
-attributes(GPA_Allmean$coords)
-attributes(allom_res_all)
 
 open3d()
-plot3d(allom_res_all[,,5], asp=FALSE)
-text3d(allom_res_all[,,5], texts=c(1:58))
-
-open3d()
-plot3d(GPA_Allmean$coords[,,5], asp=FALSE)
-text3d(GPA_Allmean$coords[,,5], texts = c(1:58))
+plot3d(Allom_all_plus_consensus[,,10], asp=FALSE)
+text3d(Allom_all_plus_consensus[,,10], texts=c(1:58))
 
 
 ```
@@ -282,7 +286,7 @@ text3d(GPA_Allmean$coords[,,5], texts = c(1:58))
 #Package into RDA file so it's available in the analyses
 ```{r}
 
-save(Data,GPA_Allmean,GPA_Basimean,GPA_Restmean, speclist,part.gp, tree_synch, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
+save(Data,GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 
 
