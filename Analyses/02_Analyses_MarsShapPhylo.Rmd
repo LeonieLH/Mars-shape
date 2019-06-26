@@ -189,6 +189,7 @@ Basiandlist<-mutate(GPA_Basimean, diet=speclist$Diet, locomotion=speclist$Locomo
 
 Restandlist<-mutate(GPA_Restmean, diet=speclist$Diet, locomotion=speclist$Locomotion)
 
+dimnames(GPA_Allmean$coords)[[3]]==speclist$Specimen
 
 #First look at diet and locomotion for all landmarks
 

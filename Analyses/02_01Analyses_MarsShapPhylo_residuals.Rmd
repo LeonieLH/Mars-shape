@@ -133,9 +133,6 @@ PCA_basi <- plotTangentSpace(Allom_basi_plus_consensus, label=dimnames(Allom_bas
 
 PCA_rest <- plotTangentSpace(Allom_rest_plus_consensus, label=dimnames(Allom_rest_plus_consensus)[[3]])
 
-
-
-
 ```
 
 Setting up some plotting parameters
@@ -254,7 +251,6 @@ plot(PCA_score_list$Basi[,1], PCA_score_list$Basi[,2], type="p",pch=21, bg=col.g
 plot(PCA_score_list$Rest[,1], PCA_score_list$Rest[,2], type="p",pch=21, bg=col.gp, cex=1.5, ylab="Rest of Skull")
 
 plot(PCA_score_list$All[,1], PCA_score_list$All[,2], type="p",pch=21, bg=col.gp, cex=1.5)
-
 
 legend(x=10.9,y=-0.125,
 legend=c("Caenolestid","Dasyurom.", "Didelphid","Macropod",  expression(italic("Dromiciops")), "Peramelem.","Petaroid", "Phalangeroid",
