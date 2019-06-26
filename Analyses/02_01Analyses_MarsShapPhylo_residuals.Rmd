@@ -1,5 +1,5 @@
 ---
-title: "Marsupial shape and phylogenetics"
+title: "Marsupial shape and phylogenetics - allometry residuals"
 author: "Leonie Lange-Hodgson"
 date: "22 January 2019"
 output: html_document
@@ -41,115 +41,7 @@ load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 ```
 
 
-
-
-#Images for partitions
-
-
-```{r}
-#colouring partition spheres 
-
- #provides the numbers of the parts
-  PartLevels = unique(part.gp[])
-  #colour scheme ;-)
-  Colours <- c("hotpink", "purple")
-  
-  #Mesh material
-  
- 
-  #Make mean shape that the points can be plotted on
-  Ref=mshape(GPA_Allmean$coords)
-  
-  #Or, for 3d plotting, call up the coordinates of the mean specimen; remember that the radius of the spheres might need to increase because this is not GPA'ed
-  Ref <- Data[,,7]
-  
-  Part=list()
-  ##subset the landmarks according to the partitions
-  for(i in 1:length(PartLevels)){
-    Part[[i]]<-which (part.gp[] == PartLevels[[i]])
-  }
-  
-  ##colours the spheres for each partition on the mean shape
-  
-  open3d()
-  
-  for (i in 1:length(PartLevels)){
-    spheres3d( Ref[(Part[[i]]),]*1000, col=Colours[i], lit=TRUE, radius = 900, asp=F)
-    
-  }
-
-  shade3d (Dviv, color="grey")
-  
-```
-
-
-#Evolutionary allometry
-
-```{r}
-#Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
-Phyall<-procD.pgls(coords~Csize, tree_synch, data=GPA_Allmean, iter=999)
-summary(Phyall)
-
-
-Phyallbasi<-procD.pgls(coords~Csize, tree_synch, data=GPA_Basimean, iter=999)
-summary(Phyallbasi)
-
-plotAllometry(Phyallbasi, size=GPA_Basimean$Csize, method = "RegScore")
-
-Phyallrest<-procD.pgls(coords~Csize, tree_synch, data=GPA_Restmean, iter=999)
-summary(Phyallrest)
-
-
-```
-
-
-#PlotRefto target - Function plots shape differences between a reference and target specimen
-#vector: a plot showing the vector displacements between corresponding landmarks in the reference and target specimen is shown
-
-
-# Visualize main differences OF WHAT AND WHY? YOU MIGHT ALSO ADD SOME DESCRIPTION OF THE RESULTS HERE, WHICH YOU CAN LATER PUT INTO RESULTS SECTION.
-```{r}
-
-#Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
-PRTT=gridPar(pt.bg="green", pt.size = 1)
-
-plotRefToTarget(PCA_mean$pc.shapes$PC1min, PCA_mean$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
-plotRefToTarget(PCA_mean$pc.shapes$PC2min, PCA_mean$pc.shapes$PC2max, method="vector") #Back to standard grey
-```
-
-
-
-Allometry in geometric morphometrics refers to size-related changes of morphological traits. 
-e.g. does brain size increase as body size increases?
-looking at overall shape however
-
-#Csize has an effect on shape of the landmarks
-
-##When analysing the allometry of the remaining landmark on the skull the results showed the effect size of Csize is quite small however there is a fairly significant p-value suggesting that Csize does have an effect on shape
-
-```{r}
-#Geomorph update 3.1.0 on the 27th March removed procD.Allometry so using the function procD.lm instead. 
-Allom<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_Allmean, iter=10000, print.progress=FALSE)
-summary(Allom)
-
-
-AllBasi<-procD.lm(coords~Csize, data=GPA_Basimean, iter=1000, print.progress=FALSE)
-summary(AllBasi)
-
-plotAllometry(AllBasi, size=GPA_Basimean$Csize, method = "RegScore")
-
-AllRest<-procD.lm(coords~Csize, logsz=TRUE, data=GPA_Restmean, iter=10000, print.progress=FALSE)
-summary(AllRest)
-
-```
-
-
-
 #Compare evolutionary rates of partitions and phylogenetic signal
-
-
-
-Evolutionary rates
 
 #Phylogenetic signal
 
@@ -161,16 +53,16 @@ Evolutionary rates
 
 
 parevo.rate <- 
-  compare.multi.evol.rates(GPA_Allmean$coords,  part.gp, tree_synch,iter = 1000)
+  compare.multi.evol.rates(allom_res_all,  part.gp, tree_synch,iter = 1000)
 summary(parevo.rate)
 
 # Does phylogenetic signal differ? do for the other two as well and csize
 
-physignal(GPA_Allmean$coords, tree_synch, iter = 1000)
+physignal(allom_res_all, tree_synch, iter = 1000)
 
-physignal(GPA_Basimean$coords, tree_synch, iter = 1000)
+physignal(allom_res_basi, tree_synch, iter = 1000)
 
-physignal(GPA_Restmean$coords, tree_synch, iter = 1000)
+physignal(allom_res_rest, tree_synch, iter = 1000)
 
 ```
 
@@ -183,29 +75,33 @@ physignal(GPA_Restmean$coords, tree_synch, iter = 1000)
 #Do this for each of the GPA dataframes
 
 
-Allandlist<-mutate(GPA_Allmean, diet=speclist$Diet, locomotion=speclist$Locomotion)
 
-Basiandlist<-mutate(GPA_Basimean, diet=speclist$Diet, locomotion=speclist$Locomotion)
+All_gdf_res <- geomorph.data.frame(coords = allom_res_all, diet=speclist$Diet, locomotion=speclist$Locomotion)
 
-Restandlist<-mutate(GPA_Restmean, diet=speclist$Diet, locomotion=speclist$Locomotion)
+Basi_gdf_res <- geomorph.data.frame(coords=allom_res_basi, diet=speclist$Diet, locomotion=speclist$Locomotion)
+
+Rest_gdf_res <- geomorph.data.frame(coords=allom_res_rest, diet=speclist$Diet, locomotion=speclist$Locomotion)
+
+dimnames(allom_res_basi)[[3]]==rownames(speclist)
+
 
 
 #First look at diet and locomotion for all landmarks
 
 
-Alldiet_inter<-procD.pgls(coords ~ diet, tree_synch, data = Allandlist, iter = 999)
+Alldiet_inter<-procD.pgls(coords ~ diet, tree_synch, data = All_gdf_res, iter = 999)
 summary(Alldiet_inter)
 
-AllLoco_add<-procD.pgls(coords ~ locomotion, tree_synch, data = Allandlist, iter=999)
+AllLoco_add<-procD.pgls(coords ~ locomotion, tree_synch, data = All_gdf_res, iter=999)
 summary(AllLoco_add)
 
 
 # Next look at basicranium landmarks
 
-Basidiet_inter<-procD.pgls(coords~diet, tree_synch, data = Basiandlist, iter = 999)
+Basidiet_inter<-procD.pgls(coords~diet, tree_synch, data = Basi_gdf_res, iter = 999)
 summary(Basidiet_inter)
 
-BasiLoco_inter<-procD.pgls(coords~locomotion, tree_synch, data = Basiandlist, iter=999)
+BasiLoco_inter<-procD.pgls(coords~locomotion, tree_synch, data = Basi_gdf_res, iter=999)
 summary(BasiLoco_inter)
 
 plot3d(Basiandlist$coords[,,8], asp=TRUE); text3d(Basiandlist$coords[,,8], texts=c(35:58))
@@ -214,10 +110,10 @@ plot3d(Basiandlist$coords[,,8], asp=TRUE); text3d(Basiandlist$coords[,,8], texts
                                                    
 #Then at the rest of the skull landmarks
 
-RestDiet_inter<-procD.pgls(coords~diet, tree_synch, data = Restandlist, iter = 999)
+RestDiet_inter<-procD.pgls(coords~diet, tree_synch, data = Rest_gdf_res, iter = 999)
 summary(RestDiet_inter)
 
-RestLoco_add<-procD.pgls(coords~locomotion, tree_synch, data = Restandlist, iter=999)
+RestLoco_add<-procD.pgls(coords~locomotion, tree_synch, data = Rest_gdf_res, iter=999)
 summary(RestLoco_add)
 
 
@@ -230,12 +126,14 @@ summary(RestLoco_add)
 
 ```{r}
 
-#Run PCA for all three partitions
-PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
+#Run PCA for all three partitions; it makes no difference if hte consensus is added or not but the deformation plots are better with consensus added
+PCA_mean <- plotTangentSpace(Allom_all_plus_consensus, label=dimnames(Allom_all_plus_consensus)[[3]])
 
-PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$coords)[[3]])
+PCA_basi <- plotTangentSpace(Allom_basi_plus_consensus, label=dimnames(Allom_basi_plus_consensus)[[3]])
 
-PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
+PCA_rest <- plotTangentSpace(Allom_rest_plus_consensus, label=dimnames(Allom_rest_plus_consensus)[[3]])
+
+
 
 
 ```
