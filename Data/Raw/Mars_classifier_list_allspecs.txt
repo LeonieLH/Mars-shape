@@ -16,6 +16,7 @@ Gracilinanus_microtarsus	Arboreal	Insectivore	Didelphid
 Hemibelideus_lemuroides	Arboreal	Herbivore	Petauroid
 Hypsiprymnodon_moschatus	Terrestrial	Insectivore	Macropod
 Isoodon_obesulus	Terrestrial	Omnivore	Peramelemorph
+Isoodon_obesulus	Terrestrial	Omnivore	Peramelemorph
 Lestoros_inca	Terrestrial	Insectivore	Caenolestid
 Lutreolina_crassicaudata	Terrestrial	Omnivore	Didelphid
 Macropus_rufus	Saltatorial	Herbivore	Macropod
@@ -47,3 +48,4 @@ Thylamys_pallidior	Arboreal	Insectivore	Didelphid
 Thylogale_stigmatica	Saltatorial	Herbivore	Macropod
 Trichosurus_vulpecula	Arboreal	Herbivore	Phalangeroid
 Vombatus_ursinus	Terrestrial	Herbivore	Vombatiform
+Vombatus_ursinus1	Terrestrial	Herbivore	Vombatiform

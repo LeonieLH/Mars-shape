@@ -286,7 +286,7 @@ text3d(Allom_all_plus_consensus[,,10], texts=c(1:58))
 #Package into RDA file so it's available in the analyses
 ```{r}
 
-save(Data,GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
+save(Data,GPA_AllSpecimens,GPA_basi, GPA_reskull, GPA_Allmean, GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 
 

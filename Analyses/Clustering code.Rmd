@@ -1,0 +1,130 @@
+---
+title: "Clustering code"
+author: "Vera Weisbecker, code supplied partially by Pietro Viacava"
+date: "27 June 2019"
+output: html_document
+---
+
+```{r}
+
+library(geomorph)
+library(ape)
+library(plyr)
+library(geiger)
+library(caper)
+library(phytools)
+library(nlme)
+library(Morpho)
+library(ClassDiscovery)# for colourful hclust plots
+#library(landvR)
+
+
+
+load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
+
+
+```
+
+
+
+#Build phenograms based on Euclidean distances
+
+```{r}
+
+CVA_Clade <- CVA(GPA_Allmean$coords, groups = speclist$Clade, weighting = TRUE, plot = TRUE)
+
+length(dimnames(GPA_Allmean$coords)[[3]])==length(speclist$Clade)
+
+plot(CVAquollspops$CVscores[,1:2], bg=Data.pops, pch=21, typ="p", asp = 1)
+legend('topright',legend=Data.pops,
+       fill=Data.pops,cex=1)
+title("Northern quoll cranial shape variation",cex.main=1.5)
+
+
+Euclidist_quollspops <- CVAquollspops$Dist$GroupdistEuclid
+
+  
+the.cluster <- hclust(as.dist(Euclidist_quollspops))
+plot(the.cluster)
+plot(nj(Euclidist_quolls),main="Neighbor Joining") 
+plot(upgma(Euclidist_quolls),main="UPGMA")
+
+#Mahalanobis distances are not that good for building phenograms
+Mahadist_quolls <- CVAquollspops$Dist$GroupdistMaha
+plot(hclust(as.dist(Mahadist_quolls)))
+plot(nj(Mahadist_quolls),main="Neighbor Joining") 
+plot(upgma(Mahadist_quolls),main="UPGMA")
+```
+
+#Or you can also obtain a matrix of Procrustes distances from gpagen:
+```{r}
+#If I want to retreive the Procrustes distance matrix just like Gpagen does, but after averaging specimen configurations for multiple specimens, the below does this. 
+GPA_Allmean_coordmatrix <-array.to(GPA_Allmean$coords,"matrix")
+ProcDists <- dist(GPA_Allmean_coordmatrix, method = "euclidean")
+
+#This is for all specimens including duplicates
+
+speclistAll<-read.delim("../Data/Raw/Mars_classifier_list_allspecs.txt")
+
+
+#colsClade <- rainbow(n=3+length(levels(speclistAll$Clade)))
+#or custom-code the colours:
+levels(speclistAll$Clade)
+colsClade=c("dark orange", "purple", "green", "red", "blue", "hotpink", "turquoise", "black", "forestgreen")
+
+
+
+
+
+#Make shorter labels
+Specmat <- matrix(unlist(strsplit(as.vector(speclistAll$Specimen), "_")),ncol=2,byrow = TRUE)
+Genus <- substr(Specmat,1,3)
+ClustLab <- paste(Genus[,1], Genus[,2], sep="_")
+ClustLab <- as.vector(ClustLab)
+
+#Make hc clusters of all three partitions
+hclust_Allspecs <- hclust(as.dist(GPA_AllSpecimens$procD))
+hclust_Basi <- hclust(as.dist(GPA_basi$procD))
+hclust_Rest <- hclust(as.dist(GPA_reskull$procD))
+
+par(mfrow = c(2,1))
+#plotColoredClusters(hclust_Allspecs, labs=ClustLab , cols= colsClade[speclistAll$Clade], axes=FALSE, ann=FALSE, main= "Whole" )
+plotColoredClusters(hclust_Basi, labs=ClustLab , cols= colsClade[speclistAll$Clade], axes=FALSE, ann=FALSE, main= "Basicranium", line=0); legend("topright", "Basicranium", bty="n")
+plotColoredClusters(hclust_Rest, labs=ClustLab , cols= colsClade[speclistAll$Clade], axes=FALSE, ann=FALSE, main = "Rest", line=0 ); legend("topright", "Rest of Skull", bty="n")
+
+
+```
+
+#aaand this is the code I wrote with the bootstrapping included and saving each phenogram into a list:
+
+```{r}
+#PILOT phenogram bootstrapping
+
+list_thephylo.cluster <- list()
+
+
+for(replicate in 1:1000){
+  
+  sampledquolls<-sample(1:nrow(quollsdata), size = nrow(quollsdata), replace=TRUE)
+  
+  
+  gpaspecs<-gpagen(A_reorder [,,sampledquolls], curves = NULL, surfaces = NULL, PrinAxes = TRUE,
+                   max.iter = NULL, ProcD = TRUE, Proj = TRUE, print.progress = TRUE)
+  
+  All.shape<-gpaspecs$coords
+  #Extract similarity matrix
+  
+  ProcD.mat <- gpaspecs$procD
+  
+  #Build phenogram
+  
+  the.cluster <- hclust(as.dist(ProcD.mat))
+  
+  #Convert phenogram to phylo format
+  
+  list_thephylo.cluster[[replicate]] <- as.phylo(the.cluster)
+}
+
+
+
+list_thephylo.cluster
