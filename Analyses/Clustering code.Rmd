@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-
+library(rgl)
 library(geomorph)
 library(ape)
 library(plyr)
@@ -16,6 +16,7 @@ library(phytools)
 library(nlme)
 library(Morpho)
 library(ClassDiscovery)# for colourful hclust plots
+
 #library(landvR)
 
 

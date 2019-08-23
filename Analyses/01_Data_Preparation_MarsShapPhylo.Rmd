@@ -256,9 +256,12 @@ name.check(tree_synch,GPA_Allmean$Csize)
 
 #THE BELOW USES THE COORDINATES OF THE DATASET WITH SPECIES AVERAGED; CSIZE WITH SPECIES AVERAGED;AND CONSENSUS CONFIG OF THE COORDINAGES WITH THE SPECIES AVERAGED. BUT THIS MEANS THE DATASET WITH THE SPECIES AVERAGED HAD TO GO THROUGH ANOTHER GPA, WHICH I BELIEVE IS CORRECT BUT SHOULD BE DOUBLE CHECKED
 
+#Make pgls of coords with size to get residuals (from the resulting pgls summary)
 allom_all<-procD.pgls(coords~Csize, tree_synch, data=GPA_Allmean, iter=999)
 summary(allom_all)
+#Turn the residuals into an appropriate array
 allom_res_all <-arrayspecs(allom_all$pgls.residuals,dim(GPA_Allmean$coords)[[1]],3)
+#Add the consensus shape (from the GPA) to residuals if you want to understand the landmark variation in the residuals
 Allom_all_plus_consensus <- allom_res_all + array(GPA_allmean_consensus, dim(allom_res_all))
 
 
