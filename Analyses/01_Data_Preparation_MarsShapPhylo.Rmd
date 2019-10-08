@@ -76,21 +76,22 @@ part.gp=as.factor(part.gp$V1)
 
 
 #GPA for all coordinates
+
 ```{r}
 #Run GPA
 GPA_AllSpecimens <- gpagen(Data)
+```
 
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
-#Remember= dim() is the dimensions of an object
-
+```{r}
 
 # shape data
 ind.coords <- aggregate(two.d.array(GPA_AllSpecimens$coords) ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1]
 rownames(ind.coords) <- unique(dimnames(GPA_AllSpecimens$coords)[[3]])
 ind.coords <- arrayspecs(ind.coords, p=ncol(ind.coords)/3, k=3)
-#ind.coords_gpa <- gpagen (ind.coords) #double-sliding the configurations seems dubious to me.
+#ind.coords_gpa <- gpagen (ind.coords) #Leonie did this but double-sliding the configurations seems dubious to me.
 
 # centroid size data
 ind.Csize <- as.vector(aggregate(GPA_AllSpecimens$Csize ~ dimnames(GPA_AllSpecimens$coords)[[3]], FUN=mean)[,-1])
@@ -206,8 +207,7 @@ GPA_restmean_consensus <- GPA_reskull$consensus
 #names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
 
 ```{r}
-#All 3 analyses (Maximum likelihood (ML), Bayesian, and parsimony) performed in Mitchell et al. (2014) resulted in well-resolved and concordant trees.
-#I chose the first tree (ML, without outgroups) due to the use of it in their further analyses
+#This is the ML tree of Mitchell et al. 2014
 
 tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
 tree_use <- tree[1]$tree_1
@@ -250,11 +250,11 @@ name.check(tree_synch,GPA_Allmean$Csize)
 
 #Making coordinate datasets with size correction
 
-#NOTE THAT THIS CURRENTLY USES THE CONSENSUS CONFIGURATION OF THE DATASET WITH ALL SPECIMENS! I NEED TO FIX THIS ABOVE BUT I ALSO THINK THAT LEONIE FORGOT OT RE-RUN THE GPA ON THE COLLAPSED DATASET
+
 ```{r, echo=FALSE}
 
 
-#THE BELOW USES THE COORDINATES OF THE DATASET WITH SPECIES AVERAGED; CSIZE WITH SPECIES AVERAGED;AND CONSENSUS CONFIG OF THE COORDINAGES WITH THE SPECIES AVERAGED. BUT THIS MEANS THE DATASET WITH THE SPECIES AVERAGED HAD TO GO THROUGH ANOTHER GPA, WHICH I BELIEVE IS CORRECT BUT SHOULD BE DOUBLE CHECKED
+#THE BELOW USES THE COORDINATES OF THE DATASET WITH SPECIES AVERAGED; CSIZE WITH SPECIES AVERAGED;AND CONSENSUS CONFIG OF THE COORDINAGES WITH THE SPECIES AVERAGED.
 
 #Make pgls of coords with size to get residuals (from the resulting pgls summary)
 allom_all<-procD.pgls(coords~Csize, tree_synch, data=GPA_Allmean, iter=999)
@@ -286,10 +286,44 @@ text3d(Allom_all_plus_consensus[,,10], texts=c(1:58))
 ```
 
 
+#To understand the main variation in shape between marsupial species I run a Principal Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+
+#Each PC represents a particular aspect of the overall shape variation, see more in the chunk
+
+```{r}
+
+#Run PCA for all three partitions
+PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
+
+PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$coords)[[3]])
+
+PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
+
+
+```
+
+
+
+for warping etc
+
+```{r}
+ #Make mean shape that the points can be plotted on
+MeanShape=mshape(GPA_Allmean$coords)
+  
+  #Or, for 3d plotting, call up the coordinates of the mean specimen; remember that the radius of the spheres might need to increase because this is not GPA'ed
+RefCoords <- Data[,,7]
+
+Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii_small.ply")
+
+
+Meanwarp_Dviv <- warpRefMesh(Dviv,RefCoords*1000, MeanShape )
+
+
+```
 #Package into RDA file so it's available in the analyses
 ```{r}
 
-save(Data,GPA_AllSpecimens,GPA_basi, GPA_reskull, GPA_Allmean, GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
+save(Data,GPA_AllSpecimens,GPA_basi, GPA_reskull, GPA_Allmean, GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, PCA_mean, PCA_basi, PCA_rest, MeanShape, RefCoords, Dviv, Meanwarp_Dviv, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 
 

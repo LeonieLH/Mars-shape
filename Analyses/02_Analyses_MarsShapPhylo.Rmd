@@ -34,7 +34,7 @@ library(viridis)
 library(stringr)
 library(scales)
 
-Dviv <- read.ply("../Data/Dasyurus_viverrinus_ascii.ply")
+
 
 load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
@@ -54,14 +54,8 @@ load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
   #colour scheme ;-)
   Colours <- c("hotpink", "purple")
   
-  #Mesh material
-  
+
  
-  #Make mean shape that the points can be plotted on
-  Ref=mshape(GPA_Allmean$coords)
-  
-  #Or, for 3d plotting, call up the coordinates of the mean specimen; remember that the radius of the spheres might need to increase because this is not GPA'ed
-  Ref <- Data[,,7]
   
   Part=list()
   ##subset the landmarks according to the partitions
@@ -74,12 +68,28 @@ load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
   open3d()
   
   for (i in 1:length(PartLevels)){
-    spheres3d( Ref[(Part[[i]]),]*1000, col=Colours[i], lit=TRUE, radius = 900, asp=F)
+    spheres3d( RefCoords[(Part[[i]]),]*1000, col=Colours[i], lit=TRUE, radius = 900, asp=F)
     
   }
 
   shade3d (Dviv, color="grey")
   
+```
+
+
+#Prepare meshes
+
+```{r}
+
+open3d()
+shade3d (Dviv, color="grey" )
+
+spheres3d(RefCoords*1000, radius = 900, asp=F)
+
+Warped_Dviv <- warpRefMesh(Dviv,RefCoords*1000, MeanShape )
+
+
+
 ```
 
 
@@ -111,9 +121,12 @@ summary(Phyallrest)
 ```{r}
 
 #Below is a starting point for customizing your PlotRefToTarget plots. I recommend playing with this! This then gets fed into plotRefToTarget as per below.
-PRTT=gridPar(pt.bg="green", pt.size = 1)
+PRTT=gridPar(pt.bg="green", pt.size = 0.5)
 
-plotRefToTarget(PCA_mean$pc.shapes$PC1min, PCA_mean$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
+
+
+plotRefToTarget(ref, PCA_mean$pc.shapes$PC1max, method="vector", mag=0.6,gridPars = PRTT)
+
 plotRefToTarget(PCA_mean$pc.shapes$PC2min, PCA_mean$pc.shapes$PC2max, method="vector") #Back to standard grey
 ```
 
@@ -225,21 +238,6 @@ summary(RestLoco_add)
 ```
 
 
-#To understand the main variation in shape between marsupial species I run a Principal Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
-
-#Each PC represents a particular aspect of the overall shape variation, see more in the chunk
-
-```{r}
-
-#Run PCA for all three partitions
-PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
-
-PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$coords)[[3]])
-
-PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
-
-
-```
 
 Setting up some plotting parameters
 
