@@ -81,13 +81,20 @@ load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 ```{r}
 
+PRTT=gridPar(pt.bg="hotpink", pt.size = 0.5)
+
 open3d()
-shade3d (Dviv, color="grey" )
+plotRefToTarget(MeanShape,PCA_mean$pc.shapes$PC1max, method="vector", mag = 1, gridPars = PRTT)
 
-spheres3d(RefCoords*1000, radius = 900, asp=F)
 
-Warped_Dviv <- warpRefMesh(Dviv,RefCoords*1000, MeanShape )
 
+for (i in 1:length(PartLevels)){
+    spheres3d( MeanShape[(Part[[i]]),], col=Colours[i], lit=TRUE, radius = 0.003, asp=F)
+    
+  }
+
+
+shade3d (Meanwarp_Dviv, color="grey", alpha=0.1 )
 
 
 ```
