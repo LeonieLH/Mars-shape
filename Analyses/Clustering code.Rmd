@@ -16,15 +16,84 @@ library(phytools)
 library(nlme)
 library(Morpho)
 library(ClassDiscovery)# for colourful hclust plots
+library(phangorn)
+
 
 #library(landvR)
 
-
+# My rmd file for some reason won't recognise it s local file, so this sets the wd to local
+library(rstudioapi)
+setwd(dirname(getActiveDocumentContext()$path))
 
 load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 
 ```
+
+```{r, echo=TRUE}
+
+Partitions <- list( GPA_Allmean = GPA_Allmean$coords, GPA_Basimean = GPA_Basimean$coords, GPA_Restmean = GPA_Restmean$coords, Allom_all = Allom_all_plus_consensus, Allom_basi = Allom_basi_plus_consensus, Allom_rest = Allom_rest_plus_consensus)
+
+Euclidean_list <- list()
+UPGMA_trees <- list(paste("UPGMA_tree_", names(Partitions)))
+NJ_trees <- list(paste("NJ_tree_", names(Partitions)))
+
+#compute euclidean distances
+
+for (i in (1:length(Partitions))){ 
+  
+
+  Euclidean_list [[i]] <- dist(two.d.array(Partitions[[i]]), method = "euclidean")
+  
+  UPGMA_trees [[i]] <-  upgma(Euclidean_list[[i]])
+  
+  NJ_trees [[i]]    <- NJ(Euclidean_list[[i]])
+  
+    }
+  
+Morpho_trees <- c(UPGMA_trees, NJ_trees)
+names(Morpho_trees) <- c(paste("UPGMA_tree_", names(Partitions), sep= ""),
+                         paste("NJ_tree_", names(Partitions), sep = "" ))
+
+
+
+```
+
+#just plotting some stuff
+```{r}
+
+
+Dist_eucl_Allmean <- dist(two.d.array(GPA_Allmean$coords), method = "euclidean")
+
+#hclust_upgma <- hclust(Dist_eucl_Allmean, method = "average")
+
+#this isphangorn using hclust upgma. I checked, this really gives the same result as hclust 
+upgma <- upgma(Dist_eucl_Allmean, method = "average")
+nj <- NJ(Dist_eucl_Allmean)
+
+
+
+plot.new()
+par(mfrow=c(2,1))
+
+plot(upgma)
+plot(nj)
+
+
+#Create object with all the morpho trees
+
+```
+
+#Tree congruence
+
+```{r}
+
+treedist(upgma, nj, check.labels = TRUE)
+treedist(upgma, tree_synch, check.labels = TRUE)
+
+
+```
+
 
 
 
@@ -60,7 +129,7 @@ plot(upgma(Mahadist_quolls),main="UPGMA")
 #Or you can also obtain a matrix of Procrustes distances from gpagen:
 ```{r}
 #If I want to retreive the Procrustes distance matrix just like Gpagen does, but after averaging specimen configurations for multiple specimens, the below does this. 
-GPA_Allmean_coordmatrix <-array.to(GPA_Allmean$coords,"matrix")
+GPA_Allmean_coordmatrix <-arrayspecs(GPA_Allmean$coords,"matrix")
 ProcDists <- dist(GPA_Allmean_coordmatrix, method = "euclidean")
 
 #This is for all specimens including duplicates

@@ -17,6 +17,13 @@ library(geiger)
 library(caper)
 library(devtools)
 library(phytools)
+
+# My rmd file for some reason won't recognise it s local file, so this sets the wd to local
+library(rstudioapi)
+setwd(dirname(getActiveDocumentContext()$path))
+
+load("../Data/Processed/Tree.rda")
+
 ```
 
 ## Read in coordinates
@@ -25,6 +32,7 @@ library(phytools)
 ```{r }
 
 filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
+
 
 #Next step is to remove the Museum IDs from the specimen names   
   
@@ -79,7 +87,7 @@ part.gp=as.factor(part.gp$V1)
 
 ```{r}
 #Run GPA
-GPA_AllSpecimens <- gpagen(Data)
+GPA_AllSpecimens <- gpagen(Data, Proj = TRUE)
 ```
 
 
@@ -124,14 +132,12 @@ Data_basi=Data[which(part.gp==2),,]
 attributes(Data_basi)
 
 #GPA
-GPA_basi <- gpagen(Data_basi)
+GPA_basi <- gpagen(Data_basi, Proj = TRUE)
 
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
 #Two of the species in this dataset have multiple specimens which means they must be averaged prior to analysis. Once this is performed, GPA must be run again to incorporate these changes 
-
-#Remember= dim() is the dimensions of an object
 
 
 # shape data
@@ -153,7 +159,7 @@ GPA_Basimean <-geomorph.data.frame(coords=basi.coords, Csize=basi.Csize)
 dimnames(GPA_Basimean$coords)[[3]] <-dimnames(basi.coords)[[3]]
 names(GPA_Basimean$Csize) <- names(basi.Csize)
 
-GPA_basimean_consensus <-GPA_basi$consensus
+GPA_basimean_consensus_shape <-GPA_basi$consensus
 
 ```
 
@@ -171,7 +177,7 @@ attributes(Data_reskull)
 
 #GPA
 
-GPA_reskull <- gpagen(Data_reskull)
+GPA_reskull <- gpagen(Data_reskull,Proj = TRUE)
 
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
@@ -200,51 +206,6 @@ dimnames(GPA_Restmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
 names(GPA_Restmean$Csize) <- names(ind.Csize)
 
 GPA_restmean_consensus <- GPA_reskull$consensus
-
-```
-# PHYLOGENY 
-
-#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
-
-```{r}
-#This is the ML tree of Mitchell et al. 2014
-
-tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
-tree_use <- tree[1]$tree_1
-
-###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
-tree_use$tip.label
-tree_use$tip.label[5]  
-#This shows particular tip label (without the number present this code will provide you with all the tip labels)
-
-tree_use$tip.label[5] <- "Caluromys_derbianus"
-tree_use$tip.label[1] <- "Lestoros_inca"
-tree_use$tip.label[178] <- "Dendrolagus_inustus"
-tree_use$tip.label[30] <- "Philander_andersoni"
-tree_use$tip.label[124] <- "Phalanger_mimicus"
-tree_use$tip.label[66] <- "Planigale_ingrami"
-tree_use$tip.label[67] <- "Sminthopsis_murina"
-tree_use$tip.label[39] <- "Thylamys_elegans"
-tree_use$tip.label[20] <- "Marmosa_demerarae"
-tree_use$tip.label[19] <- "Marmosa_alstoni"
-tree_use$tip.label[130] <- "Petaurus_australis"
-
-
-#cHECK that it works with phylogeny
-namecheck=name.check(tree_use,GPA_Allmean$Csize)
-
-#Checking to see if the species coordinates and the species on the tree match
-Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
-length(which(!is.na (Matchtest)))
-
-#Removing all species in the tree that is not apart of the study
-tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
-
-#break up polytomies
-
-name.check(tree_synch,GPA_Allmean$Csize)
-
-#plot(tree_synch, cex=1)
 
 ```
 
@@ -286,28 +247,31 @@ text3d(Allom_all_plus_consensus[,,10], texts=c(1:58))
 ```
 
 
-#To understand the main variation in shape between marsupial species I run a Principal Component Analysis (PCA) on the coordinate data. Using the function plotTangentSpace from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
+#To understand the main variation in shape between marsupial species I run a Principal Component Analysis (PCA) on the coordinate data. Using the function gm.prcomp from the geomorph package, the resulting graph will provide the two PC axes that explain the most variation between species coordinates. To understand the variance of each PC axis, I will run the function pc.sumary$importance to view the eigenvalues. These eigenvalues aid in further analyses.
 
 #Each PC represents a particular aspect of the overall shape variation, see more in the chunk
 
 ```{r}
 
 #Run PCA for all three partitions
-PCA_mean <- plotTangentSpace(GPA_Allmean$coords, label=dimnames(GPA_Allmean$coords)[[3]])
+PCA_mean <- gm.prcomp(GPA_Allmean$coords)
 
-PCA_basi <- plotTangentSpace(GPA_Basimean$coords, label=dimnames(GPA_Basimean$coords)[[3]])
+PCA_basi <- gm.prcomp(GPA_Basimean$coords)
 
-PCA_rest <- plotTangentSpace(GPA_Restmean$coords, label=dimnames(GPA_Restmean$coords)[[3]])
+PCA_rest <- gm.prcomp(GPA_Restmean$coords)
 
 
 ```
 
 
 
-for warping etc
+#XXXredo with new mean spec
 
 ```{r}
- #Make mean shape that the points can be plotted on
+#mean specimen? 
+findMeanSpec(GPA_Allmean$coords)
+
+#Make mean shape that the points can be plotted on
 MeanShape=mshape(GPA_Allmean$coords)
   
   #Or, for 3d plotting, call up the coordinates of the mean specimen; remember that the radius of the spheres might need to increase because this is not GPA'ed
@@ -320,11 +284,12 @@ Meanwarp_Dviv <- warpRefMesh(Dviv,RefCoords*1000, MeanShape )
 
 
 ```
+
+
 #Package into RDA file so it's available in the analyses
 ```{r}
 
-save(Data,GPA_AllSpecimens,GPA_basi, GPA_reskull, GPA_Allmean, GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, PCA_mean, PCA_basi, PCA_rest, MeanShape, RefCoords, Dviv, Meanwarp_Dviv, file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
-
+save(Data,GPA_AllSpecimens,GPA_basi, GPA_reskull, GPA_Allmean, GPA_Allmean,GPA_Basimean,GPA_Restmean, Allom_all_plus_consensus,Allom_basi_plus_consensus,Allom_rest_plus_consensus,allom_res_all,allom_res_basi, allom_res_rest, speclist,part.gp, tree_synch, PCA_mean, PCA_basi, PCA_rest, MeanShape, RefCoords,  file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 
 ```

@@ -1,0 +1,33 @@
+---
+title: "Find out if all specimens have the number of same landmarks"
+author: "Vera Weisbecker"
+date: "10/12/2020"
+output: html_document
+---
+
+#This little loop scans checkpoint landmarking files and makes sure that the NumberOfPoints line has 58 landmarks listed (as opposed to a different number). It throws an error if not the case.
+
+```{r}
+
+library(rstudioapi)
+setwd(dirname(getActiveDocumentContext()$path))
+
+filelist <- list.files(path = "../Data/Raw/chkpt_stl_files_for_checking")
+
+NOP_check <- vector()
+
+for (i in 1:length(filelist)){
+  temp <- filelist[i]
+  
+  NOP_check [i] <- grep("NumberOfPoints: 58", readLines( paste("../Data/Raw/chkpt_stl_files_for_checking/", temp, sep = "") ))
+  
+}
+
+names(NOP_check) <- filelist
+
+
+length(NOP_check)
+
+
+```
+

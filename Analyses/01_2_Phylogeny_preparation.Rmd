@@ -1,0 +1,69 @@
+---
+title: "Phylogenetic_prep"
+author: "Vera Weisbecker"
+date: "10/12/2020"
+output: html_document
+---
+
+```{r}
+
+library(ape)
+
+
+
+# My rmd file for some reason won't recognise it s local file, so this sets the wd to local
+library(rstudioapi)
+setwd(dirname(getActiveDocumentContext()$path))
+
+```
+
+
+```{r}
+
+# PHYLOGENY 
+
+#names(tree_use$tip.label[NUMBER] <- "New_Species") #What I need to write to change the name of a particular tip
+
+#This is the ML tree of Mitchell et al. 2014
+
+tree=read.nexus("../Data/Raw/Mitchell_pruned_tree.nex")
+
+#just for now
+
+tree_use <- tree$tree_1
+
+###~~~~~~~CHANGING SPECIES NAME~~~~~~~~~~###
+tree_use$tip.label
+tree_use$tip.label[5]  
+#This shows particular tip label (without the number present this code will provide you with all the tip labels)
+
+tree_use$tip.label[5] <- "Caluromys_derbianus"
+tree_use$tip.label[1] <- "Lestoros_inca"
+tree_use$tip.label[178] <- "Dendrolagus_inustus"
+tree_use$tip.label[30] <- "Philander_andersoni"
+tree_use$tip.label[124] <- "Phalanger_mimicus"
+tree_use$tip.label[66] <- "Planigale_ingrami"
+tree_use$tip.label[67] <- "Sminthopsis_murina"
+tree_use$tip.label[39] <- "Thylamys_elegans"
+tree_use$tip.label[20] <- "Marmosa_demerarae"
+tree_use$tip.label[19] <- "Marmosa_alstoni"
+tree_use$tip.label[130] <- "Petaurus_australis"
+
+
+#cHECK that it works with phylogeny
+namecheck=name.check(tree_use,GPA_Allmean$Csize)
+
+#Checking to see if the species coordinates and the species on the tree match
+Matchtest=match(tree_use$tip.label,GPA_Allmean$Csize)
+length(which(!is.na (Matchtest)))
+
+#Removing all species in the tree that is not apart of the study
+tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
+
+#break up polytomies
+
+name.check(tree_synch,GPA_Allmean$Csize)
+
+#plot(tree_synch, cex=1)
+
+```
