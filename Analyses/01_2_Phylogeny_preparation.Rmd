@@ -64,6 +64,6 @@ tree_synch=drop.tip(tree_use,namecheck$tree_not_data)
 
 name.check(tree_synch,GPA_Allmean$Csize)
 
-#plot(tree_synch, cex=1)
+save(tree_synch, file = "../Data/Processed/Tree.rda")
 
 ```

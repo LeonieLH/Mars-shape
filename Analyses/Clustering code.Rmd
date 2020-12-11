@@ -50,6 +50,12 @@ for (i in (1:length(Partitions))){
   NJ_trees [[i]]    <- NJ(Euclidean_list[[i]])
   
     }
+
+#The below is required to get the Morpho_trees object into a multiPhylo object for later allowing treedist to run. This tip is from Liam Revell's blog (http://blog.phytools.org/2016/03/trick-to-append-object-of-class-phylo.html)
+
+Morpho_trees <- UPGMA_trees[[1]]
+
+class(Morpho_trees) <- "multiPhylo"
   
 Morpho_trees <- c(UPGMA_trees, NJ_trees)
 names(Morpho_trees) <- c(paste("UPGMA_tree_", names(Partitions), sep= ""),
@@ -58,6 +64,119 @@ names(Morpho_trees) <- c(paste("UPGMA_tree_", names(Partitions), sep= ""),
 
 
 ```
+
+
+#Tree congruence of the NJ and UPGMA trees relative to the "true" molecular phylogeny. Easy!
+
+
+```{r}
+
+
+#these work in individually but not by running th
+
+tree_distances_morph <- list()
+
+for (i in (1:length(Morpho_trees))){
+  
+  tree_distances_morph [[i]] <- treedist(Morpho_trees[[i]], tree_synch, check.labels = TRUE)
+  
+}
+
+names(tree_distances_morph) <- names(Morpho_trees)
+
+```
+
+#now make comparison of random trees with "true" tree
+
+```{r}
+
+tree_distances_random <- list()
+
+Random_trees <- rmtree(1000, length(tree_synch$tip.label), rooted = TRUE, tip.label = tree_synch$tip.label, br = runif)
+
+for (i in (1:length(Random_trees))){
+  
+  tree_distances_random [[i]] <- treedist(Random_trees[[i]], tree_synch, check.labels = TRUE)
+  
+}
+
+```
+
+```{r}
+
+#Make matrices of distance results for testing. I feel a bit silly with this behemoth of code but I don't know how to improve on this to get it into the data frame format it requires for plotting
+
+Diffs_random <- sapply(tree_distances_random, function(x) c (x[1], x[2], x[3], x[4]), simplify = TRUE);
+Diffs_random <-t(Diffs_random); names(Diffs_random) <- names(tree_distances_morph)[[1]]; Diffs_random <- as.data.frame(Diffs_random)
+
+Diffs_morph <- sapply(tree_distances_morph, function(x) c (x[1], x[2], x[3], x[4]), simplify = TRUE);
+Diffs_morph <-t(Diffs_morph); names(Diffs_morph) <- names(tree_distances_morph)[[1]]; Diffs_morph <- as.data.frame(Diffs_morph)
+
+
+```
+
+#Make four plots each with the random and "real" trees
+
+```{r}
+#produce density distribution
+
+dens_symm_diff_random <- density (Diffs_random$symmetric.difference )
+dens_brscore_diff_random <- density (Diffs_random$branch.score.difference )
+dens_pathdiff_random <- density(Diffs_random$path.difference)
+dens_quad_pathdiff_random <- density(Diffs_random$quadratic.path.difference)
+
+Densities_random <- list( dens_symm_diff_random, dens_brscore_diff_random, dens_pathdiff_random, dens_quad_pathdiff_random  )
+
+
+par(mfrow = c(2,2))
+
+for (i in (1:ncol(Diffs_morph))){
+  
+  plot ( range(min(Diffs_morph[i])-3, max(Densities_random[[i]]$x)+10), range(0, max(Densities_random[[i]]$y)), pch=20, col="white", type = "n", xlab = colnames(Diffs_morph[i]),
+     ylab = "Density", bty="n")
+  
+  polygon(Densities_random[[i]], col="plum1", border="plum1")
+  arrows(x0 = mean(unlist(Diffs_morph[i])), x1 = mean(unlist(Diffs_morph[i])) , y0 = max(Densities_random[[i]]$y)/3, y1=0.001, col="lightslateblue", lwd = 2, angle = 15, length = 0.15)
+ 
+  }
+
+```
+
+
+#The basicranium always performs worst! The whole dataset tends to do best
+
+```{r}
+
+
+par(mfrow = c(2,2))
+
+for (i in (1:length (colnames(Diffs_morph)))){
+  
+  bar <- barplot(Diffs_morph[,i], col="lightslateblue", names.arg = colnames(Diffs_morph)[i],border = "purple" )
+  
+  text(bar, Diffs_morph[,i]- (Diffs_morph[,i]/2) , labels = rownames(Diffs_morph), srt =90, cex = 0.8 )
+}
+
+
+
+```
+
+
+# Next: collapse shapes according to increasingly inclusive shapes (or use ancestral shapes?), then check for signal
+
+
+
+
+
+
+
+
+
+
+
+##########################old and check code
+
+
 
 #just plotting some stuff
 ```{r}
@@ -84,15 +203,17 @@ plot(nj)
 
 ```
 
-#Tree congruence
-
-```{r}
-
-treedist(upgma, nj, check.labels = TRUE)
-treedist(upgma, tree_synch, check.labels = TRUE)
 
 
-```
+
+
+
+
+
+
+
+
+
 
 
 

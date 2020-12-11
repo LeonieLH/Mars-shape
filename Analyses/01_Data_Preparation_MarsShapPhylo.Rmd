@@ -159,7 +159,7 @@ GPA_Basimean <-geomorph.data.frame(coords=basi.coords, Csize=basi.Csize)
 dimnames(GPA_Basimean$coords)[[3]] <-dimnames(basi.coords)[[3]]
 names(GPA_Basimean$Csize) <- names(basi.Csize)
 
-GPA_basimean_consensus_shape <-GPA_basi$consensus
+GPA_basimean_consensus <-GPA_basi$consensus
 
 ```
 
