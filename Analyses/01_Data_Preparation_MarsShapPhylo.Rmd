@@ -58,6 +58,22 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   
 ```
 
+
+
+#Specimens newly imported (all in mmm):
+Antechinus melanurus
+Notoryctes caurinusx2
+Myrmecobius fasciatus x2
+Pseudocheirus peregrinus x2
+Phalanger vestitus
+Sarcophilus harisii
+Tarsipes rostratus
+Thylacinus cynocephalus
+Echymipera kalubu
+
+
+
+
 #Read in classifier file that contains the species name, locomotion type, diet, and clade
 
 

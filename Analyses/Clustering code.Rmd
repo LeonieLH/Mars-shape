@@ -72,7 +72,6 @@ names(Morpho_trees) <- c(paste("UPGMA_tree_", names(Partitions), sep= ""),
 ```{r}
 
 
-#these work in individually but not by running th
 
 tree_distances_morph <- list()
 
@@ -92,7 +91,7 @@ names(tree_distances_morph) <- names(Morpho_trees)
 
 tree_distances_random <- list()
 
-Random_trees <- rmtree(1000, length(tree_synch$tip.label), rooted = TRUE, tip.label = tree_synch$tip.label, br = runif)
+Random_trees <- rmtree(10000, length(tree_synch$tip.label), rooted = TRUE, tip.label = tree_synch$tip.label, br = runif)
 
 for (i in (1:length(Random_trees))){
   
@@ -158,8 +157,9 @@ for (i in (1:length (colnames(Diffs_morph)))){
 }
 
 
-
 ```
+
+
 
 
 # Next: collapse shapes according to increasingly inclusive shapes (or use ancestral shapes?), then check for signal
