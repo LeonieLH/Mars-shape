@@ -30,6 +30,33 @@ load (file = "../Data/Processed/processed_data_for_mars_phylo_shape.rda")
 
 ```
 
+#just some draft code for the tree stuff - the tasks are:
+# 1) Find the youngest node
+# 2) prune the gree so that the youngest node is now a terminal taxon
+# 3) use the ancestral shape at that node as "species" 
+# 4) make new random-to-molecular treedist comparison distribution
+# 5) compare new morph-to-molecular treedist. Probably use Bhattacharya coefficient to assess if different from random dist
+# 6) repeat
+# 7) when this algorithm has "eaten" its way down the tree, visualise. In particular, I expect that most phylogenetic signal comes from higher, not lower branches but it would be super valuable to know if this is the case.
+
+
+```{r}
+
+#1) find the youngest node
+
+tree_synch$edge.length
+
+which(tree_synch$edge.length == max(tree_synch$edge.length))
+
+plot(tree_synch)
+edgelabels(tree_synch$edge.length)
+
+```
+
+
+
+
+
 ```{r, echo=TRUE}
 
 Partitions <- list( GPA_Allmean = GPA_Allmean$coords, GPA_Basimean = GPA_Basimean$coords, GPA_Restmean = GPA_Restmean$coords, Allom_all = Allom_all_plus_consensus, Allom_basi = Allom_basi_plus_consensus, Allom_rest = Allom_rest_plus_consensus)

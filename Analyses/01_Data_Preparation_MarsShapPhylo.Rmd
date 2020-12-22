@@ -62,6 +62,18 @@ GPA_AllSpecimens <- gpagen(Data, Proj = TRUE)
 
 ```
 
+#using my Landm.place.check function to visualise each sepcimen relative to the specimen that's closest to the mean. I am just running through all specimens in batches of 10
+
+```{r}
+
+
+Landm.place.check(51,62,Meanspec)
+
+
+```
+
+#After identifying specimens with switched landmarks in the Landm.place.check function, I fixed them manually by switching coordinates in the text file (with one exception where the lms were truly out of order, and I had to open the specimen in checkpoint). The notes on which specimesn were fixed are in the "original with mistakes " folder.
+
 ```{r}
 names(GPA_AllSpecimens$Csize)
 
@@ -69,13 +81,11 @@ plotRefToTarget(GPA_AllSpecimens$coords[,,20], GPA_AllSpecimens$coords[,,Meanspe
                 gridPars = gridPar(pt.size = 0.5, pt.bg = "hotpink", txt.cex = "1.5" ))
 
 ```
-
-
-Check that landmarks are read in OK and there are no outliers
+#Check that landmarks are read in OK and there are no outliers; also visually check that the landmarks are placed without any crossovers. 
 
 ```{r}
 
-#PCA looks ok, with Notoryctes, Tarsipes and Vombatus predictably outliers
+#these checks looks ok, with Notoryctes, Tarsipes and Vombatus predictably outliers and comfortingly duplicate specimens occupy similar spaces
 
 PCA <- gm.prcomp(GPA_AllSpecimens$coords)
 plot(PCA$x[,2]~ PCA$x[,1]  )
@@ -88,14 +98,23 @@ plotOutliers(GPA_AllSpecimens$coords)
 Meanspec <- findMeanSpec(GPA_AllSpecimens$coords)
 
 
-#using my Landm.place.check function to visualise each sepcimen relative to the specimen that's closest to the mean. I am just running through all specimens in batches of 10
+```
+
+#Now, check that the centroid sizes are ok. Sometimes they are out by an order of magnitude, this is normally easy to see by ordering the specimens by size and checking that they match what you expect.
+
+#I CAN SEE  A COUPLE THAT MIGHT BE WRONG. ONE IS THE LARGE V URSINUS (ALTHOGH STRANGELY, THEY HAVE THE SAME HEAD LENGTH AND DON'T SEEM TO HAVE ANY DIFFERENT LANDMARK ORDERS OF MAGNITUDE!), TRICHOSURUS ALSO LOOKS BIG AND SHOULD BE CHECKED; AEPYPRYMNUS AT THE BOTTOM ALSO DOESN'T LOOK RIGHT. TARSIPES ROSTRATUS IS TOO LARGE. SUGGEST WAITING UNTIL ALL BODY MASSES ARE AVAILABLE.
+
+```{r}
 
 
-Landm.place.check(51,62,Meanspec)
+Csize_ordered <- GPA_AllSpecimens$Csize[order(GPA_AllSpecimens$Csize)]
 
+plot( Csize_ordered ~ seq(1:length(Csize_ordered)))
+text( Csize_ordered ~ seq(1:length(Csize_ordered)), label = names(GPA_AllSpecimens$Csize), cex = 0.5)
 
 
 ```
+
 
 #Importation of partition map, ensure it's a factor; The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
 
@@ -107,19 +126,6 @@ part.gp=as.factor(part.gp$V1)
 
 
 ```
-
-
-#Specimens newly imported (all in mmm):
-Antechinus melanurus
-Notoryctes caurinusx2
-Myrmecobius fasciatus x2
-Pseudocheirus peregrinus x2
-Phalanger vestitus
-Sarcophilus harisii
-Tarsipes rostratus
-Thylacinus cynocephalus
-Echymipera kalubu
-
 
 
 #Make a list of species as the basis for the classifier file
@@ -134,7 +140,6 @@ Echymipera kalubu
 speciesList <- read.csv("../Data/Raw/Species_classifier.csv")
 
 ```
-
 
 
 
