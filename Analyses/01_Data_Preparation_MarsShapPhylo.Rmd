@@ -36,11 +36,7 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
 
 #Next step is to remove the Museum IDs from the specimen names   
   
-  tmp <- matrix(unlist(strsplit(filelist, "_")),ncol=3,byrow = TRUE)   
-
-  filelist_species <- paste(tmp[,1], tmp[,2], sep="_")
-
-  
+ 
   names <- gsub (".txt", "", filelist) # extracts names of specimens from the file name
   filelist <- paste("../Data/Raw/Coordinates/", filelist, sep="") # rename with path
   coords <- NULL # make empty object that will be filled with 3D array of coordinate data
@@ -49,12 +45,12 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
     k <- dim(temp)[1] 
     coords <- rbind(coords, two.d.array(temp)) }
   Data <- arrayspecs(coords, k, 3) 
-  dimnames(Data)[[3]] <- filelist_species
+  dimnames(Data)[[3]] <- names
  # remove(i, filelist, names, k, coords, temp) # clean up environment
   
   #Double check that the 3D info is entered properly
-  plot3d(Data[,,4], asp=FALSE)
-  text3d(Data[,,4], texts=c(1:58))
+  plot3d(Data[,,5], asp  = FALSE)
+  text3d(Data[,,5], texts=c(1:58))
   
 ```
 
@@ -73,19 +69,22 @@ Echymipera kalubu
 
 
 
-
-#Read in classifier file that contains the species name, locomotion type, diet, and clade
-
-
+#Make a list of species as the basis for the classifier file
 ```{r}
 
-speclist<- read.delim("../Data/Raw/Mars_classifier_list.txt")
-rownames(speclist) <-speclist$Specimen
+
+#speclist <- matrix(unlist (strsplit(gsub(".txt", "", filelist), "_" )), ncol=3, byrow = TRUE )
+#rownames(speclist) <- gsub(".txt", "", filelist); colnames(speclist) <- c("Genus", "Species", "Museum_ID")
+
+#write.csv(speclist, file = "../Data/Raw/Species_classifier.csv")
+
+speclist <- read.csv("../Data/Raw/Species_classifier.csv")
 
 ```
 
-#Importation of partition map, ensure it's a factor
 
+
+#Importation of partition map, ensure it's a factor
 
 The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
 
@@ -106,6 +105,43 @@ part.gp=as.factor(part.gp$V1)
 GPA_AllSpecimens <- gpagen(Data, Proj = TRUE)
 ```
 
+Check that landmarks are read in OK and there are no outliers
+
+```{r}
+
+#PCA looks ok, with Notoryctes, Tarsipes and Vombatus predictably outliers
+
+PCA <- gm.prcomp(GPA_AllSpecimens$coords)
+plot(PCA$x[,2]~ PCA$x[,1]  )
+text(PCA$x[,2]~ PCA$x[,1], labels = dimnames(GPA_AllSpecimens$coords)[[3]])
+
+#outliers? Again, Notoryctes and Vombatus. Just.
+
+plotOutliers(GPA_AllSpecimens$coords)
+
+Meanspec <- findMeanSpec(GPA_AllSpecimens$coords)
+
+#Wombat
+plotRefToTarget(GPA_AllSpecimens$coords[,,62],GPA_AllSpecimens$coords[,,Meanspec], method = "vector" )
+
+#Notoryctes 
+
+plotRefToTarget(GPA_AllSpecimens$coords[,,36],GPA_AllSpecimens$coords[,,Meanspec], method = "vector" )
+
+#a quick way of visualising all 
+
+#No. 8 is an error
+
+for (i in c(1:10)){
+  
+  plotRefToTarget(GPA_AllSpecimens$coords[,,i],GPA_AllSpecimens$coords[,,Meanspec], method = "vector", main = dimnames(GPA_AllSpecimens$coords)[[3]][i])
+  rgl.open()
+  
+  
+  
+}
+
+```
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
@@ -136,6 +172,7 @@ GPA_allmean_consensus <- GPA_AllSpecimens$consensus
 
 dimnames(GPA_Allmean$coords)[[3]] <-dimnames(ind.coords)[[3]]
 names(GPA_Allmean$Csize) <- names(ind.Csize)
+
 
 ```
 
