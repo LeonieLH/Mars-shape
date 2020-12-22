@@ -22,7 +22,9 @@ library(phytools)
 library(rstudioapi)
 setwd(dirname(getActiveDocumentContext()$path))
 
-load("../Data/Processed/Tree.rda")
+#contains some auxiliary functions
+
+source("Utilities.r")
 
 ```
 
@@ -48,12 +50,63 @@ filelist <- list.files(path= "../Data/Raw/Coordinates", pattern = "*.txt")
   dimnames(Data)[[3]] <- names
  # remove(i, filelist, names, k, coords, temp) # clean up environment
   
-  #Double check that the 3D info is entered properly
-  plot3d(Data[,,5], asp  = FALSE)
-  text3d(Data[,,5], texts=c(1:58))
-  
 ```
 
+
+#GPA for all coordinates
+
+```{r}
+
+#Run GPA
+GPA_AllSpecimens <- gpagen(Data, Proj = TRUE)
+
+```
+
+```{r}
+names(GPA_AllSpecimens$Csize)
+
+plotRefToTarget(GPA_AllSpecimens$coords[,,20], GPA_AllSpecimens$coords[,,Meanspec], method = "vector", main = dimnames(GPA_AllSpecimens$coords)[[3]][20], label=TRUE,
+                gridPars = gridPar(pt.size = 0.5, pt.bg = "hotpink", txt.cex = "1.5" ))
+
+```
+
+
+Check that landmarks are read in OK and there are no outliers
+
+```{r}
+
+#PCA looks ok, with Notoryctes, Tarsipes and Vombatus predictably outliers
+
+PCA <- gm.prcomp(GPA_AllSpecimens$coords)
+plot(PCA$x[,2]~ PCA$x[,1]  )
+text(PCA$x[,2]~ PCA$x[,1], labels = dimnames(GPA_AllSpecimens$coords)[[3]])
+
+#outliers? Again, Notoryctes and Vombatus. Just.
+
+plotOutliers(GPA_AllSpecimens$coords)
+
+Meanspec <- findMeanSpec(GPA_AllSpecimens$coords)
+
+
+#using my Landm.place.check function to visualise each sepcimen relative to the specimen that's closest to the mean. I am just running through all specimens in batches of 10
+
+
+Landm.place.check(51,62,Meanspec)
+
+
+
+```
+
+#Importation of partition map, ensure it's a factor; The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
+
+```{r}
+
+### Import the  partition map, ensure it's a factor
+part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
+part.gp=as.factor(part.gp$V1)
+
+
+```
 
 
 #Specimens newly imported (all in mmm):
@@ -78,70 +131,14 @@ Echymipera kalubu
 
 #write.csv(speclist, file = "../Data/Raw/Species_classifier.csv")
 
-speclist <- read.csv("../Data/Raw/Species_classifier.csv")
+speciesList <- read.csv("../Data/Raw/Species_classifier.csv")
 
 ```
 
 
 
-#Importation of partition map, ensure it's a factor
-
-The landmark dataset will now be split into two partitions; basicranium and the rest of the skull. 
-
-```{r}
-
-### Import the  partition map, ensure it's a factor
-part.gp=as.vector(read.csv("../Data/Raw/partitions.csv", header=FALSE))
-part.gp=as.factor(part.gp$V1)
 
 
-```
-
-
-#GPA for all coordinates
-
-```{r}
-#Run GPA
-GPA_AllSpecimens <- gpagen(Data, Proj = TRUE)
-```
-
-Check that landmarks are read in OK and there are no outliers
-
-```{r}
-
-#PCA looks ok, with Notoryctes, Tarsipes and Vombatus predictably outliers
-
-PCA <- gm.prcomp(GPA_AllSpecimens$coords)
-plot(PCA$x[,2]~ PCA$x[,1]  )
-text(PCA$x[,2]~ PCA$x[,1], labels = dimnames(GPA_AllSpecimens$coords)[[3]])
-
-#outliers? Again, Notoryctes and Vombatus. Just.
-
-plotOutliers(GPA_AllSpecimens$coords)
-
-Meanspec <- findMeanSpec(GPA_AllSpecimens$coords)
-
-#Wombat
-plotRefToTarget(GPA_AllSpecimens$coords[,,62],GPA_AllSpecimens$coords[,,Meanspec], method = "vector" )
-
-#Notoryctes 
-
-plotRefToTarget(GPA_AllSpecimens$coords[,,36],GPA_AllSpecimens$coords[,,Meanspec], method = "vector" )
-
-#a quick way of visualising all 
-
-#No. 8 is an error
-
-for (i in c(1:10)){
-  
-  plotRefToTarget(GPA_AllSpecimens$coords[,,i],GPA_AllSpecimens$coords[,,Meanspec], method = "vector", main = dimnames(GPA_AllSpecimens$coords)[[3]][i])
-  rgl.open()
-  
-  
-  
-}
-
-```
 
 #AVERAGING MULTIPLE SPECIMENS OF ONE SPECIES
 
